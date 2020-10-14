@@ -17,15 +17,7 @@
     "lib": [
       "es2018",
       "dom"
-    ],
-    "paths": {
-      "angular-query": [
-        "dist/angular-query"
-      ],
-      "angular-query/*": [
-        "dist/angular-query/*"
-      ]
-    }
+    ]
   },
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,
