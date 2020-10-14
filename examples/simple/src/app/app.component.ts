@@ -1,6 +1,7 @@
 import { AngularQueryService } from 'angular-query';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -8,14 +9,25 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit, OnDestroy {
-  title = 'simple';
+  public data: any = {};
+  public error: any;
+  public isLoading: boolean;
 
   private subscription: Subscription;
 
-  constructor(private angularQueryService: AngularQueryService) {}
+  constructor(private angularQueryService: AngularQueryService, private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.subscription = this.angularQueryService.useQuery().subscribe();
+    this.angularQueryService
+      .useQuery('repoData', () =>
+        this.http.get<any>('https://api.github.com/repos/tannerlinsley/react-query').toPromise()
+      )
+      .subscribe((response) => {
+        const { data, error, isLoading } = response;
+        this.data = data;
+        this.error = error;
+        this.isLoading = isLoading;
+      });
   }
 
   ngOnDestroy(): void {

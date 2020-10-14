@@ -1,7 +1,16 @@
-<div>
-  <h1>{{ data.name }}</h1>
-  <p>{{ data.description }}</p>
-  <strong>👀 {{ data.subscribers_count }}</strong>
-  <strong>✨ {{ data.stargazers_count }}</strong>
-  <strong>🍴 {{ data.forks_count }}</strong>
-</div>
+<ng-container *ngIf="isLoading; then loading; else loaded"></ng-container>
+<ng-template #loading>
+  <p>Loading...</p>
+</ng-template>
+<ng-template #loaded>
+  <ng-container *ngIf="error; else valid"> An error has occurred: {{ error.message }} </ng-container>
+  <ng-template #valid>
+    <div>
+      <h1>{{ data.name }}</h1>
+      <p>{{ data.description }}</p>
+      <strong>👀 {{ data.subscribers_count }}</strong>
+      <strong>✨ {{ data.stargazers_count }}</strong>
+      <strong>🍴 {{ data.forks_count }}</strong>
+    </div>
+  </ng-template>
+</ng-template>
