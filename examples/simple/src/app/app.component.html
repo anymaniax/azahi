@@ -1,16 +1,20 @@
-<ng-container *ngIf="isLoading; then loading; else loaded"></ng-container>
-<ng-template #loading>
-  <p>Loading...</p>
-</ng-template>
-<ng-template #loaded>
-  <ng-container *ngIf="error; else valid"> An error has occurred: {{ error.message }} </ng-container>
-  <ng-template #valid>
-    <div>
-      <h1>{{ data.name }}</h1>
-      <p>{{ data.description }}</p>
-      <strong>👀 {{ data.subscribers_count }}</strong>
-      <strong>✨ {{ data.stargazers_count }}</strong>
-      <strong>🍴 {{ data.forks_count }}</strong>
-    </div>
+<ng-container *ngIf="repoData$ | async as repoData">
+  <ng-container *ngIf="repoData.isLoading; then loading; else loaded"></ng-container>
+  <ng-template #loading>
+    <p>Loading...</p>
   </ng-template>
-</ng-template>
+  <ng-template #loaded>
+    <ng-container *ngIf="repoData.error; else valid">
+      An error has occurred: {{ repoData.error['message'] }}
+    </ng-container>
+    <ng-template #valid>
+      <div>
+        <h1>{{ repoData.data.name }}</h1>
+        <p>{{ repoData.data.description }}</p>
+        <strong>👀 {{ repoData.data.subscribers_count }}</strong>
+        <strong>✨ {{ repoData.data.stargazers_count }}</strong>
+        <strong>🍴 {{ repoData.data.forks_count }}</strong>
+      </div>
+    </ng-template>
+  </ng-template>
+</ng-container>
