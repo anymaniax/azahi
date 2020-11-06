@@ -23,7 +23,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     this.repoData$ = this.angularQueryService.useQuery('repoData', () =>
-      this.http.get<RepoInformation>('https://api.github.com/repos/tannerlinsley/react-query').toPromise()
+      this.http.get<RepoInformation>('https://api.github.com/repos/tannerlinsley/react-query')
     );
   }
 }

@@ -1,4 +1,5 @@
-import { RetryValue, RetryDelayValue } from './query/core/retryer';
+import { Observable } from 'rxjs';
+import { RetryDelayValue, RetryValue } from './query/core/retryer';
 import {
   InfiniteQueryObserverOptions,
   InfiniteQueryObserverResult,
@@ -8,8 +9,12 @@ import {
   QueryObserverResult,
 } from './query/core/types';
 
+export type QueryFunctionWithObservable<T = unknown> = (...args: any[]) => T | Promise<T> | Observable<T>;
+
 export interface UseBaseQueryOptions<TData = unknown, TError = unknown, TQueryFnData = TData, TQueryData = TQueryFnData>
-  extends QueryObserverOptions<TData, TError, TQueryFnData, TQueryData> {}
+  extends Omit<QueryObserverOptions<TData, TError, TQueryFnData, TQueryData>, 'queryFn'> {
+  queryFn?: QueryFunctionWithObservable<TQueryFnData>;
+}
 
 export interface UseQueryOptions<TData = unknown, TError = unknown, TQueryFnData = TData>
   extends UseBaseQueryOptions<TData, TError, TQueryFnData> {}
