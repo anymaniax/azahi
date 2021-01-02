@@ -1,25 +1,26 @@
-import type { QueryBehavior } from './query'
-import type { InfiniteData, QueryOptions } from './types'
+import type { QueryBehavior } from './query';
+import { isCancelable } from './retryer';
+import type { InfiniteData, QueryFunctionContext, QueryOptions } from './types';
 
 export function infiniteQueryBehavior<
-  TData,
+  TQueryFnData,
   TError,
-  TQueryFnData
->(): QueryBehavior<InfiniteData<TData>, TError, TQueryFnData> {
+  TData
+>(): QueryBehavior<TQueryFnData, TError, InfiniteData<TData>> {
   return {
-    onFetch: context => {
-      context.queryFn = () => {
-        const fetchMore = context.fetchOptions?.meta?.fetchMore
-        const pageParam = fetchMore?.pageParam
-        const isFetchingNextPage = fetchMore?.direction === 'forward'
-        const isFetchingPreviousPage = fetchMore?.direction === 'backward'
-        const oldPages = context.state.data?.pages || []
-        const oldPageParams = context.state.data?.pageParams || []
-        let newPageParams = oldPageParams
+    onFetch: (context) => {
+      context.fetchFn = () => {
+        const fetchMore = context.fetchOptions?.meta?.fetchMore;
+        const pageParam = fetchMore?.pageParam;
+        const isFetchingNextPage = fetchMore?.direction === 'forward';
+        const isFetchingPreviousPage = fetchMore?.direction === 'backward';
+        const oldPages = context.state.data?.pages || [];
+        const oldPageParams = context.state.data?.pageParams || [];
+        let newPageParams = oldPageParams;
 
         // Get query function
         const queryFn =
-          context.options.queryFn || (() => Promise.reject('Missing queryFn'))
+          context.options.queryFn || (() => Promise.reject('Missing queryFn'));
 
         // Create function to fetch a page
         const fetchPage = (
@@ -29,82 +30,109 @@ export function infiniteQueryBehavior<
           previous?: boolean
         ): Promise<unknown[]> => {
           if (typeof param === 'undefined' && !manual && pages.length) {
-            return Promise.resolve(pages)
+            return Promise.resolve(pages);
           }
 
-          return Promise.resolve()
-            .then(() => queryFn(...context.params, param))
-            .then(page => {
-              newPageParams = previous
-                ? [param, ...newPageParams]
-                : [...newPageParams, param]
-              return previous ? [page, ...pages] : [...pages, page]
-            })
-        }
+          const queryFnContext: QueryFunctionContext = {
+            queryKey: context.queryKey,
+            pageParam: param,
+          };
 
-        let promise
+          let cancelFn: undefined | (() => any);
+          const queryFnResult = queryFn(queryFnContext);
+          if ((queryFnResult as any).cancel) {
+            cancelFn = (queryFnResult as any).cancel;
+          }
+
+          const promise = Promise.resolve(queryFnResult).then((page) => {
+            newPageParams = previous
+              ? [param, ...newPageParams]
+              : [...newPageParams, param];
+            return previous ? [page, ...pages] : [...pages, page];
+          });
+
+          if (cancelFn) {
+            const promiseAsAny = promise as any;
+            promiseAsAny.cancel = cancelFn;
+          }
+
+          return promise;
+        };
+
+        let promise;
 
         // Fetch first page?
         if (!oldPages.length) {
-          promise = fetchPage([])
+          promise = fetchPage([]);
         }
 
         // Fetch next page?
         else if (isFetchingNextPage) {
-          const manual = typeof pageParam !== 'undefined'
+          const manual = typeof pageParam !== 'undefined';
           const param = manual
             ? pageParam
-            : getNextPageParam(context.options, oldPages)
-          promise = fetchPage(oldPages, manual, param)
+            : getNextPageParam(context.options, oldPages);
+          promise = fetchPage(oldPages, manual, param);
         }
 
         // Fetch previous page?
         else if (isFetchingPreviousPage) {
-          const manual = typeof pageParam !== 'undefined'
+          const manual = typeof pageParam !== 'undefined';
           const param = manual
             ? pageParam
-            : getPreviousPageParam(context.options, oldPages)
-          promise = fetchPage(oldPages, manual, param, true)
+            : getPreviousPageParam(context.options, oldPages);
+          promise = fetchPage(oldPages, manual, param, true);
         }
 
         // Refetch pages
         else {
-          newPageParams = []
+          newPageParams = [];
 
-          const manual = typeof context.options.getNextPageParam === 'undefined'
+          const manual =
+            typeof context.options.getNextPageParam === 'undefined';
 
           // Fetch first page
-          promise = fetchPage([], manual, oldPageParams[0])
+          promise = fetchPage([], manual, oldPageParams[0]);
 
           // Fetch remaining pages
           for (let i = 1; i < oldPages.length; i++) {
-            promise = promise.then(pages => {
+            promise = promise.then((pages) => {
               const param = manual
                 ? oldPageParams[i]
-                : getNextPageParam(context.options, pages)
-              return fetchPage(pages, manual, param)
-            })
+                : getNextPageParam(context.options, pages);
+              return fetchPage(pages, manual, param);
+            });
           }
         }
 
-        return promise.then(pages => ({ pages, pageParams: newPageParams }))
-      }
+        const finalPromise = promise.then((pages) => ({
+          pages,
+          pageParams: newPageParams,
+        }));
+
+        if (isCancelable(promise)) {
+          const finalPromiseAsAny = finalPromise as any;
+          finalPromiseAsAny.cancel = promise.cancel;
+        }
+
+        return finalPromise;
+      };
     },
-  }
+  };
 }
 
 export function getNextPageParam(
   options: QueryOptions<any, any>,
   pages: unknown[]
 ): unknown | undefined {
-  return options.getNextPageParam?.(pages[pages.length - 1], pages)
+  return options.getNextPageParam?.(pages[pages.length - 1], pages);
 }
 
 export function getPreviousPageParam(
   options: QueryOptions<any, any>,
   pages: unknown[]
 ): unknown | undefined {
-  return options.getPreviousPageParam?.(pages[0], pages)
+  return options.getPreviousPageParam?.(pages[0], pages);
 }
 
 /**
@@ -115,9 +143,14 @@ export function hasNextPage(
   options: QueryOptions<any, any>,
   pages?: unknown
 ): boolean | undefined {
-  return options.getNextPageParam && Array.isArray(pages)
-    ? typeof getNextPageParam(options, pages) !== 'undefined'
-    : undefined
+  if (options.getNextPageParam && Array.isArray(pages)) {
+    const nextPageParam = getNextPageParam(options, pages);
+    return (
+      typeof nextPageParam !== 'undefined' &&
+      nextPageParam !== null &&
+      nextPageParam !== false
+    );
+  }
 }
 
 /**
@@ -128,7 +161,12 @@ export function hasPreviousPage(
   options: QueryOptions<any, any>,
   pages?: unknown
 ): boolean | undefined {
-  return options.getPreviousPageParam && Array.isArray(pages)
-    ? typeof getPreviousPageParam(options, pages) !== 'undefined'
-    : undefined
+  if (options.getPreviousPageParam && Array.isArray(pages)) {
+    const previousPageParam = getPreviousPageParam(options, pages);
+    return (
+      typeof previousPageParam !== 'undefined' &&
+      previousPageParam !== null &&
+      previousPageParam !== false
+    );
+  }
 }

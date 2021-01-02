@@ -1,9 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { UseBaseQueryService } from '../use-base-query/use-base-query.service';
-import { UseQueryOptions, UseQueryResult } from '../types';
+import { QueryKey } from '../query/core';
 import { parseQueryArgs } from '../query/core/utils';
-import { QueryFunction, QueryKey } from '../query/core';
+import {
+  QueryFunctionWithObservable,
+  UseQueryOptions,
+  UseQueryResult,
+} from '../types';
+import { UseBaseQueryService } from '../use-base-query/use-base-query.service';
 
 @Injectable({
   providedIn: 'root',
@@ -11,22 +15,28 @@ import { QueryFunction, QueryKey } from '../query/core';
 export class UseQueryService {
   constructor(private useBaseQueryService: UseBaseQueryService) {}
 
-  public useQuery<TData = unknown, TError = unknown, TQueryFnData = TData>(
-    options: UseQueryOptions<TData, TError, TQueryFnData>
+  public useQuery<
+    TQueryFnData = unknown,
+    TError = unknown,
+    TData = TQueryFnData
+  >(
+    options: UseQueryOptions<TQueryFnData, TError, TData>
   ): Observable<UseQueryResult<TData, TError>>;
-  useQuery<TData = unknown, TError = unknown, TQueryFnData = TData>(
+  useQuery<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     queryKey: QueryKey,
-    options?: UseQueryOptions<TData, TError, TQueryFnData>
+    options?: UseQueryOptions<TQueryFnData, TError, TData>
   ): Observable<UseQueryResult<TData, TError>>;
-  useQuery<TData = unknown, TError = unknown, TQueryFnData = TData>(
+  useQuery<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     queryKey: QueryKey,
-    queryFn: QueryFunction<TQueryFnData | TData>,
-    options?: UseQueryOptions<TData, TError, TQueryFnData>
+    queryFn: QueryFunctionWithObservable<TQueryFnData>,
+    options?: UseQueryOptions<TQueryFnData, TError, TData>
   ): Observable<UseQueryResult<TData, TError>>;
-  useQuery<TData, TError, TQueryFnData = TData>(
-    arg1: QueryKey | UseQueryOptions<TData, TError, TQueryFnData>,
-    arg2?: QueryFunction<TData | TQueryFnData> | UseQueryOptions<TData, TError, TQueryFnData>,
-    arg3?: UseQueryOptions<TData, TError, TQueryFnData>
+  useQuery<TQueryFnData, TError, TData = TQueryFnData>(
+    arg1: QueryKey | UseQueryOptions<TQueryFnData, TError, TData>,
+    arg2?:
+      | QueryFunctionWithObservable<TQueryFnData>
+      | UseQueryOptions<TQueryFnData, TError, TData>,
+    arg3?: UseQueryOptions<TQueryFnData, TError, TData>
   ): Observable<UseQueryResult<TData, TError>> {
     const parsedOptions = parseQueryArgs(arg1, arg2, arg3);
     const { useBaseQuery } = this.useBaseQueryService;

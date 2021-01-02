@@ -1,16 +1,28 @@
-import { QueryFilters, Updater, hashQueryKey, noop, parseFilterArgs, parseQueryArgs, partialMatchKey } from './utils';
+import {
+  QueryFilters,
+  Updater,
+  hashQueryKey,
+  noop,
+  parseFilterArgs,
+  parseQueryArgs,
+  partialMatchKey,
+} from './utils';
 import type {
   DefaultOptions,
+  FetchInfiniteQueryOptions,
   FetchQueryOptions,
+  InfiniteData,
   InvalidateOptions,
   InvalidateQueryFilters,
   MutationKey,
+  MutationObserverOptions,
   MutationOptions,
   QueryFunction,
   QueryKey,
   QueryObserverOptions,
   QueryOptions,
   RefetchOptions,
+  ResetOptions,
 } from './types';
 import type { QueryState, SetDataOptions } from './query';
 import { QueryCache } from './queryCache';
@@ -19,6 +31,7 @@ import { focusManager } from './focusManager';
 import { onlineManager } from './onlineManager';
 import { notifyManager } from './notifyManager';
 import { CancelOptions } from './retryer';
+import { infiniteQueryBehavior } from './infiniteQueryBehavior';
 
 // TYPES
 
@@ -85,13 +98,23 @@ export class QueryClient {
     return this.queryCache.findAll(filters).length;
   }
 
-  getQueryData<TData = unknown>(queryKey: QueryKey, filters?: QueryFilters): TData | undefined {
+  getQueryData<TData = unknown>(
+    queryKey: QueryKey,
+    filters?: QueryFilters
+  ): TData | undefined {
     return this.queryCache.find<TData>(queryKey, filters)?.state.data;
   }
 
-  setQueryData<TData>(queryKey: QueryKey, updater: Updater<TData | undefined, TData>, options?: SetDataOptions): TData {
+  setQueryData<TData>(
+    queryKey: QueryKey,
+    updater: Updater<TData | undefined, TData>,
+    options?: SetDataOptions
+  ): TData {
     const parsedOptions = parseQueryArgs(queryKey);
-    return this.queryCache.build(this, parsedOptions).setData(updater, options);
+    const defaultedOptions = this.defaultQueryOptions(parsedOptions);
+    return this.queryCache
+      .build(this, defaultedOptions)
+      .setData(updater, options);
   }
 
   getQueryState<TData = unknown, TError = undefined>(
@@ -113,8 +136,39 @@ export class QueryClient {
     });
   }
 
+  resetQueries(filters?: QueryFilters, options?: ResetOptions): Promise<void>;
+  resetQueries(
+    queryKey?: QueryKey,
+    filters?: QueryFilters,
+    options?: ResetOptions
+  ): Promise<void>;
+  resetQueries(
+    arg1?: QueryKey | QueryFilters,
+    arg2?: QueryFilters | ResetOptions,
+    arg3?: ResetOptions
+  ): Promise<void> {
+    const [filters, options] = parseFilterArgs(arg1, arg2, arg3);
+    const queryCache = this.queryCache;
+
+    const refetchFilters: QueryFilters = {
+      ...filters,
+      active: true,
+    };
+
+    return notifyManager.batch(() => {
+      queryCache.findAll(filters).forEach((query) => {
+        query.reset();
+      });
+      return this.refetchQueries(refetchFilters, options);
+    });
+  }
+
   cancelQueries(filters?: QueryFilters, options?: CancelOptions): Promise<void>;
-  cancelQueries(queryKey?: QueryKey, filters?: QueryFilters, options?: CancelOptions): Promise<void>;
+  cancelQueries(
+    queryKey?: QueryKey,
+    filters?: QueryFilters,
+    options?: CancelOptions
+  ): Promise<void>;
   cancelQueries(
     arg1?: QueryKey | QueryFilters,
     arg2?: QueryFilters | CancelOptions,
@@ -127,14 +181,23 @@ export class QueryClient {
     }
 
     const promises = notifyManager.batch(() =>
-      this.queryCache.findAll(filters).map((query) => query.cancel(cancelOptions))
+      this.queryCache
+        .findAll(filters)
+        .map((query) => query.cancel(cancelOptions))
     );
 
     return Promise.all(promises).then(noop).catch(noop);
   }
 
-  invalidateQueries(filters?: InvalidateQueryFilters, options?: InvalidateOptions): Promise<void>;
-  invalidateQueries(queryKey?: QueryKey, filters?: InvalidateQueryFilters, options?: InvalidateOptions): Promise<void>;
+  invalidateQueries(
+    filters?: InvalidateQueryFilters,
+    options?: InvalidateOptions
+  ): Promise<void>;
+  invalidateQueries(
+    queryKey?: QueryKey,
+    filters?: InvalidateQueryFilters,
+    options?: InvalidateOptions
+  ): Promise<void>;
   invalidateQueries(
     arg1?: QueryKey | InvalidateQueryFilters,
     arg2?: InvalidateQueryFilters | InvalidateOptions,
@@ -156,8 +219,15 @@ export class QueryClient {
     });
   }
 
-  refetchQueries(filters?: QueryFilters, options?: RefetchOptions): Promise<void>;
-  refetchQueries(queryKey?: QueryKey, filters?: QueryFilters, options?: RefetchOptions): Promise<void>;
+  refetchQueries(
+    filters?: QueryFilters,
+    options?: RefetchOptions
+  ): Promise<void>;
+  refetchQueries(
+    queryKey?: QueryKey,
+    filters?: QueryFilters,
+    options?: RefetchOptions
+  ): Promise<void>;
   refetchQueries(
     arg1?: QueryKey | QueryFilters,
     arg2?: QueryFilters | RefetchOptions,
@@ -165,7 +235,9 @@ export class QueryClient {
   ): Promise<void> {
     const [filters, options] = parseFilterArgs(arg1, arg2, arg3);
 
-    const promises = notifyManager.batch(() => this.queryCache.findAll(filters).map((query) => query.fetch()));
+    const promises = notifyManager.batch(() =>
+      this.queryCache.findAll(filters).map((query) => query.fetch())
+    );
 
     let promise = Promise.all(promises).then(noop);
 
@@ -176,22 +248,24 @@ export class QueryClient {
     return promise;
   }
 
-  fetchQuery<TData = unknown, TError = unknown, TQueryFnData = TData>(
-    options: FetchQueryOptions<TData, TError, TQueryFnData>
+  fetchQuery<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
+    options: FetchQueryOptions<TQueryFnData, TError, TData>
   ): Promise<TData>;
-  fetchQuery<TData = unknown, TError = unknown, TQueryFnData = TData>(
+  fetchQuery<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     queryKey: QueryKey,
-    options?: FetchQueryOptions<TData, TError, TQueryFnData>
+    options?: FetchQueryOptions<TQueryFnData, TError, TData>
   ): Promise<TData>;
-  fetchQuery<TData = unknown, TError = unknown, TQueryFnData = TData>(
+  fetchQuery<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     queryKey: QueryKey,
-    queryFn: QueryFunction<TQueryFnData | TData>,
-    options?: FetchQueryOptions<TData, TError, TQueryFnData>
+    queryFn: QueryFunction<TQueryFnData>,
+    options?: FetchQueryOptions<TQueryFnData, TError, TData>
   ): Promise<TData>;
-  fetchQuery<TData, TError, TQueryFnData = TData>(
-    arg1: QueryKey | FetchQueryOptions<TData, TError, TQueryFnData>,
-    arg2?: QueryFunction<TQueryFnData | TData> | FetchQueryOptions<TData, TError, TQueryFnData>,
-    arg3?: FetchQueryOptions<TData, TError, TQueryFnData>
+  fetchQuery<TQueryFnData, TError, TData = TQueryFnData>(
+    arg1: QueryKey | FetchQueryOptions<TQueryFnData, TError, TData>,
+    arg2?:
+      | QueryFunction<TQueryFnData>
+      | FetchQueryOptions<TQueryFnData, TError, TData>,
+    arg3?: FetchQueryOptions<TQueryFnData, TError, TData>
   ): Promise<TData> {
     const parsedOptions = parseQueryArgs(arg1, arg2, arg3);
     const defaultedOptions = this.defaultQueryOptions(parsedOptions);
@@ -210,7 +284,11 @@ export class QueryClient {
 
   prefetchQuery(options: FetchQueryOptions): Promise<void>;
   prefetchQuery(queryKey: QueryKey, options?: FetchQueryOptions): Promise<void>;
-  prefetchQuery(queryKey: QueryKey, queryFn: QueryFunction, options?: FetchQueryOptions): Promise<void>;
+  prefetchQuery(
+    queryKey: QueryKey,
+    queryFn: QueryFunction,
+    options?: FetchQueryOptions
+  ): Promise<void>;
   prefetchQuery(
     arg1: QueryKey | FetchQueryOptions,
     arg2?: QueryFunction | FetchQueryOptions,
@@ -221,8 +299,70 @@ export class QueryClient {
       .catch(noop);
   }
 
+  fetchInfiniteQuery<
+    TQueryFnData = unknown,
+    TError = unknown,
+    TData = TQueryFnData
+  >(
+    options: FetchInfiniteQueryOptions<TQueryFnData, TError, TData>
+  ): Promise<InfiniteData<TData>>;
+  fetchInfiniteQuery<
+    TQueryFnData = unknown,
+    TError = unknown,
+    TData = TQueryFnData
+  >(
+    queryKey: QueryKey,
+    options?: FetchInfiniteQueryOptions<TQueryFnData, TError, TData>
+  ): Promise<InfiniteData<TData>>;
+  fetchInfiniteQuery<
+    TQueryFnData = unknown,
+    TError = unknown,
+    TData = TQueryFnData
+  >(
+    queryKey: QueryKey,
+    queryFn: QueryFunction<TQueryFnData>,
+    options?: FetchInfiniteQueryOptions<TQueryFnData, TError, TData>
+  ): Promise<InfiniteData<TData>>;
+  fetchInfiniteQuery<TQueryFnData, TError, TData = TQueryFnData>(
+    arg1: QueryKey | FetchInfiniteQueryOptions<TQueryFnData, TError, TData>,
+    arg2?:
+      | QueryFunction<TQueryFnData>
+      | FetchInfiniteQueryOptions<TQueryFnData, TError, TData>,
+    arg3?: FetchInfiniteQueryOptions<TQueryFnData, TError, TData>
+  ): Promise<InfiniteData<TData>> {
+    const parsedOptions = parseQueryArgs(arg1, arg2, arg3);
+    parsedOptions.behavior = infiniteQueryBehavior<
+      TQueryFnData,
+      TError,
+      TData
+    >();
+    return this.fetchQuery(parsedOptions);
+  }
+
+  prefetchInfiniteQuery(options: FetchInfiniteQueryOptions): Promise<void>;
+  prefetchInfiniteQuery(
+    queryKey: QueryKey,
+    options?: FetchInfiniteQueryOptions
+  ): Promise<void>;
+  prefetchInfiniteQuery(
+    queryKey: QueryKey,
+    queryFn: QueryFunction,
+    options?: FetchInfiniteQueryOptions
+  ): Promise<void>;
+  prefetchInfiniteQuery(
+    arg1: QueryKey | FetchInfiniteQueryOptions,
+    arg2?: QueryFunction | FetchInfiniteQueryOptions,
+    arg3?: FetchInfiniteQueryOptions
+  ): Promise<void> {
+    return this.fetchInfiniteQuery(arg1 as any, arg2 as any, arg3)
+      .then(noop)
+      .catch(noop);
+  }
+
   cancelMutations(): Promise<void> {
-    const promises = notifyManager.batch(() => this.mutationCache.getAll().map((mutation) => mutation.cancel()));
+    const promises = notifyManager.batch(() =>
+      this.mutationCache.getAll().map((mutation) => mutation.cancel())
+    );
     return Promise.all(promises).then(noop).catch(noop);
   }
 
@@ -230,7 +370,12 @@ export class QueryClient {
     return this.getMutationCache().resumePausedMutations();
   }
 
-  executeMutation<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
+  executeMutation<
+    TData = unknown,
+    TError = unknown,
+    TVariables = void,
+    TContext = unknown
+  >(
     options: MutationOptions<TData, TError, TVariables, TContext>
   ): Promise<TData> {
     return this.mutationCache.build(this, options).execute();
@@ -252,8 +397,13 @@ export class QueryClient {
     this.defaultOptions = options;
   }
 
-  setQueryDefaults(queryKey: QueryKey, options: QueryOptions<any, any, any>): void {
-    const result = this.queryDefaults.find((x) => hashQueryKey(queryKey) === hashQueryKey(x.queryKey));
+  setQueryDefaults(
+    queryKey: QueryKey,
+    options: QueryObserverOptions<any, any, any, any>
+  ): void {
+    const result = this.queryDefaults.find(
+      (x) => hashQueryKey(queryKey) === hashQueryKey(x.queryKey)
+    );
     if (result) {
       result.defaultOptions = options;
     } else {
@@ -261,12 +411,22 @@ export class QueryClient {
     }
   }
 
-  getQueryDefaults(queryKey: QueryKey): QueryOptions<any, any, any> | undefined {
-    return this.queryDefaults.find((x) => partialMatchKey(queryKey, x.queryKey))?.defaultOptions;
+  getQueryDefaults(
+    queryKey?: QueryKey
+  ): QueryObserverOptions<any, any, any, any> | undefined {
+    return queryKey
+      ? this.queryDefaults.find((x) => partialMatchKey(queryKey, x.queryKey))
+          ?.defaultOptions
+      : undefined;
   }
 
-  setMutationDefaults(mutationKey: MutationKey, options: MutationOptions<any, any, any, any>): void {
-    const result = this.mutationDefaults.find((x) => hashQueryKey(mutationKey) === hashQueryKey(x.mutationKey));
+  setMutationDefaults(
+    mutationKey: MutationKey,
+    options: MutationObserverOptions<any, any, any, any>
+  ): void {
+    const result = this.mutationDefaults.find(
+      (x) => hashQueryKey(mutationKey) === hashQueryKey(x.mutationKey)
+    );
     if (result) {
       result.defaultOptions = options;
     } else {
@@ -274,20 +434,46 @@ export class QueryClient {
     }
   }
 
-  getMutationDefaults(mutationKey: MutationKey): MutationOptions<any, any, any, any> | undefined {
-    return this.mutationDefaults.find((x) => partialMatchKey(mutationKey, x.mutationKey))?.defaultOptions;
+  getMutationDefaults(
+    mutationKey?: MutationKey
+  ): MutationObserverOptions<any, any, any, any> | undefined {
+    return mutationKey
+      ? this.mutationDefaults.find((x) =>
+          partialMatchKey(mutationKey, x.mutationKey)
+        )?.defaultOptions
+      : undefined;
   }
 
-  defaultQueryOptions<T extends QueryOptions<any, any>>(options?: T): T {
-    return { ...this.defaultOptions.queries, ...options } as T;
+  defaultQueryOptions<T extends QueryOptions<any, any, any>>(options?: T): T {
+    if (options?._defaulted) {
+      return options;
+    }
+    return {
+      ...this.defaultOptions.queries,
+      ...this.getQueryDefaults(options?.queryKey),
+      ...options,
+      _defaulted: true,
+    } as T;
   }
 
-  defaultQueryObserverOptions<T extends QueryObserverOptions<any, any>>(options?: T): T {
-    return { ...this.defaultOptions.queries, ...options } as T;
+  defaultQueryObserverOptions<
+    T extends QueryObserverOptions<any, any, any, any>
+  >(options?: T): T {
+    return this.defaultQueryOptions(options);
   }
 
-  defaultMutationOptions<T extends MutationOptions<any, any, any, any>>(options?: T): T {
-    return { ...this.defaultOptions.mutations, ...options } as T;
+  defaultMutationOptions<T extends MutationOptions<any, any, any, any>>(
+    options?: T
+  ): T {
+    if (options?._defaulted) {
+      return options;
+    }
+    return {
+      ...this.defaultOptions.mutations,
+      ...this.getMutationDefaults(options?.mutationKey),
+      ...options,
+      _defaulted: true,
+    } as T;
   }
 
   clear(): void {

@@ -19,11 +19,16 @@ interface RepoInformation {
 export class AppComponent implements OnInit {
   public repoData$: Observable<QueryObserverResult<RepoInformation>>;
 
-  constructor(private angularQueryService: UseQueryService, private http: HttpClient) {}
+  constructor(
+    private angularQueryService: UseQueryService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
     this.repoData$ = this.angularQueryService.useQuery('repoData', () =>
-      this.http.get<RepoInformation>('https://api.github.com/repos/tannerlinsley/react-query').toPromise()
+      this.http.get<RepoInformation>(
+        'https://api.github.com/repos/tannerlinsley/react-query'
+      )
     );
   }
 }
