@@ -1,15 +1,11 @@
 {
   "name": "angular-query",
-  "version": "1.0.0-semantic-release",
+  "version": "0.0.1",
   "description": "Performant and powerful remote data synchronization for Angular",
-  "author": "tannerlinsley",
+  "author": "anymaniax",
   "license": "MIT",
-  "repository": "TanStack/angular-query",
-  "homepage": "https://github.com/TanStack/angular-query#readme",
-  "funding": {
-    "type": "github",
-    "url": "https://github.com/sponsors/tannerlinsley"
-  },
+  "repository": "angular-query",
+  "homepage": "https://github.com/anymaniax/angular-query#readme",
   "scripts": {
     "ng": "ng",
     "build": "ng build",
@@ -20,9 +16,8 @@
   },
   "release": {
     "branches": [
-      "1.x",
-      "master",
-      "beta"
+      "main",
+      "next"
     ]
   },
   "dependencies": {
