@@ -1,128 +1,128 @@
-import { difference, getQueryKeyHashFn, replaceAt } from './utils'
-import { notifyManager } from './notifyManager'
-import type { QueryObserverOptions, QueryObserverResult } from './types'
-import type { QueryClient } from './queryClient'
-import { QueryObserver } from './queryObserver'
-import { Subscribable } from './subscribable'
+import { difference, getQueryKeyHashFn, replaceAt } from './utils';
+import { notifyManager } from './notifyManager';
+import type { QueryObserverOptions, QueryObserverResult } from './types';
+import type { QueryClient } from './queryClient';
+import { QueryObserver } from './queryObserver';
+import { Subscribable } from './subscribable';
 
-type QueriesObserverListener = (result: QueryObserverResult[]) => void
+type QueriesObserverListener = (result: QueryObserverResult[]) => void;
 
 export class QueriesObserver extends Subscribable<QueriesObserverListener> {
-  private client: QueryClient
-  private result: QueryObserverResult[]
-  private queries: QueryObserverOptions[]
-  private observers: QueryObserver[]
+  private client: QueryClient;
+  private result: QueryObserverResult[];
+  private queries: QueryObserverOptions[];
+  private observers: QueryObserver[];
 
   constructor(client: QueryClient, queries?: QueryObserverOptions[]) {
-    super()
+    super();
 
-    this.client = client
-    this.queries = queries || []
-    this.result = []
-    this.observers = []
+    this.client = client;
+    this.queries = queries || [];
+    this.result = [];
+    this.observers = [];
 
     // Subscribe to queries
-    this.updateObservers()
+    this.updateObservers();
   }
 
   protected onSubscribe(): void {
     if (this.listeners.length === 1) {
-      this.observers.forEach(observer => {
-        observer.subscribe(result => {
-          this.onUpdate(observer, result)
-        })
-      })
+      this.observers.forEach((observer) => {
+        observer.subscribe((result) => {
+          this.onUpdate(observer, result);
+        });
+      });
     }
   }
 
   protected onUnsubscribe(): void {
     if (!this.listeners.length) {
-      this.destroy()
+      this.destroy();
     }
   }
 
   destroy(): void {
-    this.listeners = []
-    this.observers.forEach(observer => {
-      observer.destroy()
-    })
+    this.listeners = [];
+    this.observers.forEach((observer) => {
+      observer.destroy();
+    });
   }
 
   setQueries(queries: QueryObserverOptions[]): void {
-    this.queries = queries
-    this.updateObservers()
+    this.queries = queries;
+    this.updateObservers();
   }
 
   getCurrentResult(): QueryObserverResult[] {
-    return this.result
+    return this.result;
   }
 
   private updateObservers(): void {
-    let hasIndexChange = false
+    let hasIndexChange = false;
 
-    const prevObservers = this.observers
+    const prevObservers = this.observers;
     const newObservers = this.queries.map((options, i) => {
-      let observer: QueryObserver | undefined = prevObservers[i]
+      let observer: QueryObserver | undefined = prevObservers[i];
 
-      const defaultedOptions = this.client.defaultQueryObserverOptions(options)
-      const hashFn = getQueryKeyHashFn(defaultedOptions)
-      defaultedOptions.queryHash = hashFn(defaultedOptions.queryKey!)
+      const defaultedOptions = this.client.defaultQueryObserverOptions(options);
+      const hashFn = getQueryKeyHashFn(defaultedOptions);
+      defaultedOptions.queryHash = hashFn(defaultedOptions.queryKey!);
 
       if (
         !observer ||
         observer.getCurrentQuery().queryHash !== defaultedOptions.queryHash
       ) {
-        hasIndexChange = true
+        hasIndexChange = true;
         observer = prevObservers.find(
-          x => x.getCurrentQuery().queryHash === defaultedOptions.queryHash
-        )
+          (x) => x.getCurrentQuery().queryHash === defaultedOptions.queryHash
+        );
       }
 
       if (observer) {
-        observer.setOptions(defaultedOptions)
-        return observer
+        observer.setOptions(defaultedOptions);
+        return observer;
       }
 
-      return new QueryObserver(this.client, defaultedOptions)
-    })
+      return new QueryObserver(this.client, defaultedOptions);
+    });
 
     if (prevObservers.length === newObservers.length && !hasIndexChange) {
-      return
+      return;
     }
 
-    this.observers = newObservers
-    this.result = newObservers.map(observer => observer.getCurrentResult())
+    this.observers = newObservers;
+    this.result = newObservers.map((observer) => observer.getCurrentResult());
 
     if (!this.listeners.length) {
-      return
+      return;
     }
 
-    difference(prevObservers, newObservers).forEach(observer => {
-      observer.destroy()
-    })
+    difference(prevObservers, newObservers).forEach((observer) => {
+      observer.destroy();
+    });
 
-    difference(newObservers, prevObservers).forEach(observer => {
-      observer.subscribe(result => {
-        this.onUpdate(observer, result)
-      })
-    })
+    difference(newObservers, prevObservers).forEach((observer) => {
+      observer.subscribe((result) => {
+        this.onUpdate(observer, result);
+      });
+    });
 
-    this.notify()
+    this.notify();
   }
 
   private onUpdate(observer: QueryObserver, result: QueryObserverResult): void {
-    const index = this.observers.indexOf(observer)
+    const index = this.observers.indexOf(observer);
     if (index !== -1) {
-      this.result = replaceAt(this.result, index, result)
-      this.notify()
+      this.result = replaceAt(this.result, index, result);
+      this.notify();
     }
   }
 
   private notify(): void {
     notifyManager.batch(() => {
-      this.listeners.forEach(listener => {
-        listener(this.result)
-      })
-    })
+      this.listeners.forEach((listener) => {
+        listener(this.result);
+      });
+    });
   }
 }

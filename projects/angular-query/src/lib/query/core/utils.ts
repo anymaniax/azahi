@@ -1,4 +1,4 @@
-import type { Query } from './query'
+import type { Query } from './query';
 import type {
   MutationFunction,
   MutationKey,
@@ -8,7 +8,7 @@ import type {
   QueryKeyHashFunction,
   QueryOptions,
   QueryStatus,
-} from './types'
+} from './types';
 
 // TYPES
 
@@ -16,45 +16,45 @@ export interface QueryFilters {
   /**
    * Include or exclude active queries
    */
-  active?: boolean
+  active?: boolean;
   /**
    * Match query key exactly
    */
-  exact?: boolean
+  exact?: boolean;
   /**
    * Include or exclude inactive queries
    */
-  inactive?: boolean
+  inactive?: boolean;
   /**
    * Include queries matching this predicate function
    */
-  predicate?: (query: Query) => boolean
+  predicate?: (query: Query) => boolean;
   /**
    * Include queries matching this query key
    */
-  queryKey?: QueryKey
+  queryKey?: QueryKey;
   /**
    * Include or exclude stale queries
    */
-  stale?: boolean
+  stale?: boolean;
   /**
    * Include or exclude fetching queries
    */
-  fetching?: boolean
+  fetching?: boolean;
 }
 
-export type DataUpdateFunction<TInput, TOutput> = (input: TInput) => TOutput
+export type DataUpdateFunction<TInput, TOutput> = (input: TInput) => TOutput;
 
 export type Updater<TInput, TOutput> =
   | TOutput
-  | DataUpdateFunction<TInput, TOutput>
+  | DataUpdateFunction<TInput, TOutput>;
 
 // UTILS
 
-export const isServer = typeof window === 'undefined'
+export const isServer = typeof window === 'undefined';
 
 export function noop(): undefined {
-  return undefined
+  return undefined;
 }
 
 export function functionalUpdate<TInput, TOutput>(
@@ -63,29 +63,29 @@ export function functionalUpdate<TInput, TOutput>(
 ): TOutput {
   return typeof updater === 'function'
     ? (updater as DataUpdateFunction<TInput, TOutput>)(input)
-    : updater
+    : updater;
 }
 
 export function isValidTimeout(value: any): value is number {
-  return typeof value === 'number' && value >= 0 && value !== Infinity
+  return typeof value === 'number' && value >= 0 && value !== Infinity;
 }
 
 export function ensureArray<T>(value: T | T[]): T[] {
-  return Array.isArray(value) ? value : [value]
+  return Array.isArray(value) ? value : [value];
 }
 
 export function difference<T>(array1: T[], array2: T[]): T[] {
-  return array1.filter(x => array2.indexOf(x) === -1)
+  return array1.filter((x) => array2.indexOf(x) === -1);
 }
 
 export function replaceAt<T>(array: T[], index: number, value: T): T[] {
-  const copy = array.slice(0)
-  copy[index] = value
-  return copy
+  const copy = array.slice(0);
+  copy[index] = value;
+  return copy;
 }
 
 export function timeUntilStale(updatedAt: number, staleTime?: number): number {
-  return Math.max(updatedAt + (staleTime || 0) - Date.now(), 0)
+  return Math.max(updatedAt + (staleTime || 0) - Date.now(), 0);
 }
 
 export function parseQueryArgs<TOptions extends QueryOptions<any, any>>(
@@ -94,14 +94,14 @@ export function parseQueryArgs<TOptions extends QueryOptions<any, any>>(
   arg3?: TOptions
 ): TOptions {
   if (!isQueryKey(arg1)) {
-    return arg1 as TOptions
+    return arg1 as TOptions;
   }
 
   if (typeof arg2 === 'function') {
-    return { ...arg3, queryKey: arg1, queryFn: arg2 } as TOptions
+    return { ...arg3, queryKey: arg1, queryFn: arg2 } as TOptions;
   }
 
-  return { ...arg2, queryKey: arg1 } as TOptions
+  return { ...arg2, queryKey: arg1 } as TOptions;
 }
 
 export function parseMutationArgs<
@@ -113,16 +113,16 @@ export function parseMutationArgs<
 ): TOptions {
   if (isQueryKey(arg1)) {
     if (typeof arg2 === 'function') {
-      return { ...arg3, mutationKey: arg1, mutationFn: arg2 } as TOptions
+      return { ...arg3, mutationKey: arg1, mutationFn: arg2 } as TOptions;
     }
-    return { ...arg2, mutationKey: arg1 } as TOptions
+    return { ...arg2, mutationKey: arg1 } as TOptions;
   }
 
   if (typeof arg1 === 'function') {
-    return { ...arg2, mutationFn: arg1 } as TOptions
+    return { ...arg2, mutationFn: arg1 } as TOptions;
   }
 
-  return { ...arg1 } as TOptions
+  return { ...arg1 } as TOptions;
 }
 
 export function parseFilterArgs<
@@ -135,7 +135,7 @@ export function parseFilterArgs<
 ): [TFilters, TOptions | undefined] {
   return (isQueryKey(arg1)
     ? [{ ...arg2, queryKey: arg1 }, arg3]
-    : [arg1 || {}, arg2]) as [TFilters, TOptions]
+    : [arg1 || {}, arg2]) as [TFilters, TOptions];
 }
 
 export function matchQuery(
@@ -150,57 +150,57 @@ export function matchQuery(
     predicate,
     queryKey,
     stale,
-  } = filters
+  } = filters;
 
   if (isQueryKey(queryKey)) {
     if (exact) {
-      const hashFn = getQueryKeyHashFn(query.options)
+      const hashFn = getQueryKeyHashFn(query.options);
       if (query.queryHash !== hashFn(queryKey)) {
-        return false
+        return false;
       }
     } else if (!partialMatchKey(query.queryKey, queryKey)) {
-      return false
+      return false;
     }
   }
 
-  let isActive
+  let isActive;
 
   if (inactive === false || (active && !inactive)) {
-    isActive = true
+    isActive = true;
   } else if (active === false || (inactive && !active)) {
-    isActive = false
+    isActive = false;
   }
 
   if (typeof isActive === 'boolean' && query.isActive() !== isActive) {
-    return false
+    return false;
   }
 
   if (typeof stale === 'boolean' && query.isStale() !== stale) {
-    return false
+    return false;
   }
 
   if (typeof fetching === 'boolean' && query.isFetching() !== fetching) {
-    return false
+    return false;
   }
 
   if (predicate && !predicate(query)) {
-    return false
+    return false;
   }
 
-  return true
+  return true;
 }
 
 export function getQueryKeyHashFn(
   options?: QueryOptions<any, any>
 ): QueryKeyHashFunction {
-  return options?.queryKeyHashFn || hashQueryKey
+  return options?.queryKeyHashFn || hashQueryKey;
 }
 
 /**
  * Default query keys hash function.
  */
 export function hashQueryKey(queryKey: QueryKey): string {
-  return stableValueHash(queryKey)
+  return stableValueHash(queryKey);
 }
 
 /**
@@ -212,11 +212,11 @@ export function stableValueHash(value: any): string {
       ? Object.keys(val)
           .sort()
           .reduce((result, key) => {
-            result[key] = val[key]
-            return result
+            result[key] = val[key];
+            return result;
           }, {} as any)
       : val
-  )
+  );
 }
 
 /**
@@ -226,7 +226,7 @@ export function partialMatchKey(
   a: string | unknown[],
   b: string | unknown[]
 ): boolean {
-  return partialDeepEqual(ensureArray(a), ensureArray(b))
+  return partialDeepEqual(ensureArray(a), ensureArray(b));
 }
 
 /**
@@ -234,18 +234,18 @@ export function partialMatchKey(
  */
 export function partialDeepEqual(a: any, b: any): boolean {
   if (a === b) {
-    return true
+    return true;
   }
 
   if (typeof a !== typeof b) {
-    return false
+    return false;
   }
 
   if (typeof a === 'object' && typeof b === 'object') {
-    return !Object.keys(b).some(key => !partialDeepEqual(a[key], b[key]))
+    return !Object.keys(b).some((key) => !partialDeepEqual(a[key], b[key]));
   }
 
-  return false
+  return false;
 }
 
 /**
@@ -253,34 +253,34 @@ export function partialDeepEqual(a: any, b: any): boolean {
  * If not, it will replace any deeply equal children of `b` with those of `a`.
  * This can be used for structural sharing between JSON values for example.
  */
-export function replaceEqualDeep<T>(a: unknown, b: T): T
+export function replaceEqualDeep<T>(a: unknown, b: T): T;
 export function replaceEqualDeep(a: any, b: any): any {
   if (a === b) {
-    return a
+    return a;
   }
 
-  const array = Array.isArray(a) && Array.isArray(b)
+  const array = Array.isArray(a) && Array.isArray(b);
 
   if (array || (isPlainObject(a) && isPlainObject(b))) {
-    const aSize = array ? a.length : Object.keys(a).length
-    const bItems = array ? b : Object.keys(b)
-    const bSize = bItems.length
-    const copy: any = array ? [] : {}
+    const aSize = array ? a.length : Object.keys(a).length;
+    const bItems = array ? b : Object.keys(b);
+    const bSize = bItems.length;
+    const copy: any = array ? [] : {};
 
-    let equalItems = 0
+    let equalItems = 0;
 
     for (let i = 0; i < bSize; i++) {
-      const key = array ? i : bItems[i]
-      copy[key] = replaceEqualDeep(a[key], b[key])
+      const key = array ? i : bItems[i];
+      copy[key] = replaceEqualDeep(a[key], b[key]);
       if (copy[key] === a[key]) {
-        equalItems++
+        equalItems++;
       }
     }
 
-    return aSize === bSize && equalItems === aSize ? a : copy
+    return aSize === bSize && equalItems === aSize ? a : copy;
   }
 
-  return b
+  return b;
 }
 
 /**
@@ -288,61 +288,61 @@ export function replaceEqualDeep(a: any, b: any): any {
  */
 export function shallowEqualObjects<T>(a: T, b: T): boolean {
   if ((a && !b) || (b && !a)) {
-    return false
+    return false;
   }
 
   for (const key in a) {
     if (a[key] !== b[key]) {
-      return false
+      return false;
     }
   }
 
-  return true
+  return true;
 }
 
 // Copied from: https://github.com/jonschlinkert/is-plain-object
 export function isPlainObject(o: any): o is Object {
   if (!hasObjectPrototype(o)) {
-    return false
+    return false;
   }
 
   // If has modified constructor
-  const ctor = o.constructor
+  const ctor = o.constructor;
   if (typeof ctor === 'undefined') {
-    return true
+    return true;
   }
 
   // If has modified prototype
-  const prot = ctor.prototype
+  const prot = ctor.prototype;
   if (!hasObjectPrototype(prot)) {
-    return false
+    return false;
   }
 
   // If constructor does not have an Object-specific method
   if (!prot.hasOwnProperty('isPrototypeOf')) {
-    return false
+    return false;
   }
 
   // Most likely a plain Object
-  return true
+  return true;
 }
 
 function hasObjectPrototype(o: any): boolean {
-  return Object.prototype.toString.call(o) === '[object Object]'
+  return Object.prototype.toString.call(o) === '[object Object]';
 }
 
 export function isQueryKey(value: any): value is QueryKey {
-  return typeof value === 'string' || Array.isArray(value)
+  return typeof value === 'string' || Array.isArray(value);
 }
 
 export function isError(value: any): value is Error {
-  return value instanceof Error
+  return value instanceof Error;
 }
 
 export function sleep(timeout: number): Promise<void> {
-  return new Promise(resolve => {
-    setTimeout(resolve, timeout)
-  })
+  return new Promise((resolve) => {
+    setTimeout(resolve, timeout);
+  });
 }
 
 export function getStatusProps<T extends QueryStatus>(status: T) {
@@ -352,7 +352,7 @@ export function getStatusProps<T extends QueryStatus>(status: T) {
     isSuccess: status === 'success',
     isError: status === 'error',
     isIdle: status === 'idle',
-  }
+  };
 }
 
 /**
@@ -362,9 +362,9 @@ export function getStatusProps<T extends QueryStatus>(status: T) {
 export function scheduleMicrotask(callback: () => void): void {
   Promise.resolve()
     .then(callback)
-    .catch(error =>
+    .catch((error) =>
       setTimeout(() => {
-        throw error
+        throw error;
       })
-    )
+    );
 }

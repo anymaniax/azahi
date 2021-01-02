@@ -1,13 +1,9 @@
 {
   "extends": "../../.eslintrc.json",
-  "ignorePatterns": [
-    "!**/*"
-  ],
+  "ignorePatterns": ["!**/*"],
   "overrides": [
     {
-      "files": [
-        "*.ts"
-      ],
+      "files": ["*.ts"],
       "parserOptions": {
         "project": [
           "projects/angular-query/tsconfig.lib.json",
@@ -38,17 +34,12 @@
             "accessibility": "explicit"
           }
         ],
-        "arrow-parens": [
-          "off",
-          "always"
-        ],
+        "arrow-parens": ["off", "always"],
         "import/order": "off"
       }
     },
     {
-      "files": [
-        "*.html"
-      ],
+      "files": ["*.html"],
       "rules": {}
     }
   ]

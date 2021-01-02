@@ -1,4 +1,12 @@
-import { QueryFilters, Updater, hashQueryKey, noop, parseFilterArgs, parseQueryArgs, partialMatchKey } from './utils';
+import {
+  QueryFilters,
+  Updater,
+  hashQueryKey,
+  noop,
+  parseFilterArgs,
+  parseQueryArgs,
+  partialMatchKey,
+} from './utils';
 import type {
   DefaultOptions,
   FetchQueryOptions,
@@ -85,11 +93,18 @@ export class QueryClient {
     return this.queryCache.findAll(filters).length;
   }
 
-  getQueryData<TData = unknown>(queryKey: QueryKey, filters?: QueryFilters): TData | undefined {
+  getQueryData<TData = unknown>(
+    queryKey: QueryKey,
+    filters?: QueryFilters
+  ): TData | undefined {
     return this.queryCache.find<TData>(queryKey, filters)?.state.data;
   }
 
-  setQueryData<TData>(queryKey: QueryKey, updater: Updater<TData | undefined, TData>, options?: SetDataOptions): TData {
+  setQueryData<TData>(
+    queryKey: QueryKey,
+    updater: Updater<TData | undefined, TData>,
+    options?: SetDataOptions
+  ): TData {
     const parsedOptions = parseQueryArgs(queryKey);
     return this.queryCache.build(this, parsedOptions).setData(updater, options);
   }
@@ -114,7 +129,11 @@ export class QueryClient {
   }
 
   cancelQueries(filters?: QueryFilters, options?: CancelOptions): Promise<void>;
-  cancelQueries(queryKey?: QueryKey, filters?: QueryFilters, options?: CancelOptions): Promise<void>;
+  cancelQueries(
+    queryKey?: QueryKey,
+    filters?: QueryFilters,
+    options?: CancelOptions
+  ): Promise<void>;
   cancelQueries(
     arg1?: QueryKey | QueryFilters,
     arg2?: QueryFilters | CancelOptions,
@@ -127,14 +146,23 @@ export class QueryClient {
     }
 
     const promises = notifyManager.batch(() =>
-      this.queryCache.findAll(filters).map((query) => query.cancel(cancelOptions))
+      this.queryCache
+        .findAll(filters)
+        .map((query) => query.cancel(cancelOptions))
     );
 
     return Promise.all(promises).then(noop).catch(noop);
   }
 
-  invalidateQueries(filters?: InvalidateQueryFilters, options?: InvalidateOptions): Promise<void>;
-  invalidateQueries(queryKey?: QueryKey, filters?: InvalidateQueryFilters, options?: InvalidateOptions): Promise<void>;
+  invalidateQueries(
+    filters?: InvalidateQueryFilters,
+    options?: InvalidateOptions
+  ): Promise<void>;
+  invalidateQueries(
+    queryKey?: QueryKey,
+    filters?: InvalidateQueryFilters,
+    options?: InvalidateOptions
+  ): Promise<void>;
   invalidateQueries(
     arg1?: QueryKey | InvalidateQueryFilters,
     arg2?: InvalidateQueryFilters | InvalidateOptions,
@@ -156,8 +184,15 @@ export class QueryClient {
     });
   }
 
-  refetchQueries(filters?: QueryFilters, options?: RefetchOptions): Promise<void>;
-  refetchQueries(queryKey?: QueryKey, filters?: QueryFilters, options?: RefetchOptions): Promise<void>;
+  refetchQueries(
+    filters?: QueryFilters,
+    options?: RefetchOptions
+  ): Promise<void>;
+  refetchQueries(
+    queryKey?: QueryKey,
+    filters?: QueryFilters,
+    options?: RefetchOptions
+  ): Promise<void>;
   refetchQueries(
     arg1?: QueryKey | QueryFilters,
     arg2?: QueryFilters | RefetchOptions,
@@ -165,7 +200,9 @@ export class QueryClient {
   ): Promise<void> {
     const [filters, options] = parseFilterArgs(arg1, arg2, arg3);
 
-    const promises = notifyManager.batch(() => this.queryCache.findAll(filters).map((query) => query.fetch()));
+    const promises = notifyManager.batch(() =>
+      this.queryCache.findAll(filters).map((query) => query.fetch())
+    );
 
     let promise = Promise.all(promises).then(noop);
 
@@ -190,7 +227,9 @@ export class QueryClient {
   ): Promise<TData>;
   fetchQuery<TData, TError, TQueryFnData = TData>(
     arg1: QueryKey | FetchQueryOptions<TData, TError, TQueryFnData>,
-    arg2?: QueryFunction<TQueryFnData | TData> | FetchQueryOptions<TData, TError, TQueryFnData>,
+    arg2?:
+      | QueryFunction<TQueryFnData | TData>
+      | FetchQueryOptions<TData, TError, TQueryFnData>,
     arg3?: FetchQueryOptions<TData, TError, TQueryFnData>
   ): Promise<TData> {
     const parsedOptions = parseQueryArgs(arg1, arg2, arg3);
@@ -210,7 +249,11 @@ export class QueryClient {
 
   prefetchQuery(options: FetchQueryOptions): Promise<void>;
   prefetchQuery(queryKey: QueryKey, options?: FetchQueryOptions): Promise<void>;
-  prefetchQuery(queryKey: QueryKey, queryFn: QueryFunction, options?: FetchQueryOptions): Promise<void>;
+  prefetchQuery(
+    queryKey: QueryKey,
+    queryFn: QueryFunction,
+    options?: FetchQueryOptions
+  ): Promise<void>;
   prefetchQuery(
     arg1: QueryKey | FetchQueryOptions,
     arg2?: QueryFunction | FetchQueryOptions,
@@ -222,7 +265,9 @@ export class QueryClient {
   }
 
   cancelMutations(): Promise<void> {
-    const promises = notifyManager.batch(() => this.mutationCache.getAll().map((mutation) => mutation.cancel()));
+    const promises = notifyManager.batch(() =>
+      this.mutationCache.getAll().map((mutation) => mutation.cancel())
+    );
     return Promise.all(promises).then(noop).catch(noop);
   }
 
@@ -230,7 +275,12 @@ export class QueryClient {
     return this.getMutationCache().resumePausedMutations();
   }
 
-  executeMutation<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
+  executeMutation<
+    TData = unknown,
+    TError = unknown,
+    TVariables = void,
+    TContext = unknown
+  >(
     options: MutationOptions<TData, TError, TVariables, TContext>
   ): Promise<TData> {
     return this.mutationCache.build(this, options).execute();
@@ -252,8 +302,13 @@ export class QueryClient {
     this.defaultOptions = options;
   }
 
-  setQueryDefaults(queryKey: QueryKey, options: QueryOptions<any, any, any>): void {
-    const result = this.queryDefaults.find((x) => hashQueryKey(queryKey) === hashQueryKey(x.queryKey));
+  setQueryDefaults(
+    queryKey: QueryKey,
+    options: QueryOptions<any, any, any>
+  ): void {
+    const result = this.queryDefaults.find(
+      (x) => hashQueryKey(queryKey) === hashQueryKey(x.queryKey)
+    );
     if (result) {
       result.defaultOptions = options;
     } else {
@@ -261,12 +316,20 @@ export class QueryClient {
     }
   }
 
-  getQueryDefaults(queryKey: QueryKey): QueryOptions<any, any, any> | undefined {
-    return this.queryDefaults.find((x) => partialMatchKey(queryKey, x.queryKey))?.defaultOptions;
+  getQueryDefaults(
+    queryKey: QueryKey
+  ): QueryOptions<any, any, any> | undefined {
+    return this.queryDefaults.find((x) => partialMatchKey(queryKey, x.queryKey))
+      ?.defaultOptions;
   }
 
-  setMutationDefaults(mutationKey: MutationKey, options: MutationOptions<any, any, any, any>): void {
-    const result = this.mutationDefaults.find((x) => hashQueryKey(mutationKey) === hashQueryKey(x.mutationKey));
+  setMutationDefaults(
+    mutationKey: MutationKey,
+    options: MutationOptions<any, any, any, any>
+  ): void {
+    const result = this.mutationDefaults.find(
+      (x) => hashQueryKey(mutationKey) === hashQueryKey(x.mutationKey)
+    );
     if (result) {
       result.defaultOptions = options;
     } else {
@@ -274,19 +337,27 @@ export class QueryClient {
     }
   }
 
-  getMutationDefaults(mutationKey: MutationKey): MutationOptions<any, any, any, any> | undefined {
-    return this.mutationDefaults.find((x) => partialMatchKey(mutationKey, x.mutationKey))?.defaultOptions;
+  getMutationDefaults(
+    mutationKey: MutationKey
+  ): MutationOptions<any, any, any, any> | undefined {
+    return this.mutationDefaults.find((x) =>
+      partialMatchKey(mutationKey, x.mutationKey)
+    )?.defaultOptions;
   }
 
   defaultQueryOptions<T extends QueryOptions<any, any>>(options?: T): T {
     return { ...this.defaultOptions.queries, ...options } as T;
   }
 
-  defaultQueryObserverOptions<T extends QueryObserverOptions<any, any>>(options?: T): T {
+  defaultQueryObserverOptions<T extends QueryObserverOptions<any, any>>(
+    options?: T
+  ): T {
     return { ...this.defaultOptions.queries, ...options } as T;
   }
 
-  defaultMutationOptions<T extends MutationOptions<any, any, any, any>>(options?: T): T {
+  defaultMutationOptions<T extends MutationOptions<any, any, any, any>>(
+    options?: T
+  ): T {
     return { ...this.defaultOptions.mutations, ...options } as T;
   }
 

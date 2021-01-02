@@ -1,27 +1,27 @@
-type Listener = () => void
+type Listener = () => void;
 
 export class Subscribable<TListener extends Function = Listener> {
-  protected listeners: TListener[]
+  protected listeners: TListener[];
 
   constructor() {
-    this.listeners = []
+    this.listeners = [];
   }
 
   subscribe(listener?: TListener): () => void {
-    const callback = listener || (() => undefined)
+    const callback = listener || (() => undefined);
 
-    this.listeners.push(callback as TListener)
+    this.listeners.push(callback as TListener);
 
-    this.onSubscribe()
+    this.onSubscribe();
 
     return () => {
-      this.listeners = this.listeners.filter(x => x !== callback)
-      this.onUnsubscribe()
-    }
+      this.listeners = this.listeners.filter((x) => x !== callback);
+      this.onUnsubscribe();
+    };
   }
 
   hasListeners(): boolean {
-    return this.listeners.length > 0
+    return this.listeners.length > 0;
   }
 
   protected onSubscribe(): void {

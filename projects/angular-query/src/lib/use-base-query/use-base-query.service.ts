@@ -1,8 +1,17 @@
 import { Inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { QUERY_CLIENT } from '../angular-query.token';
-import { QueryClient, QueryFunction, QueryObserver, QueryObserverResult } from '../query/core';
-import { QueryFunctionWithObservable, UseBaseQueryOptions, UseQueryResult } from '../types';
+import {
+  QueryClient,
+  QueryFunction,
+  QueryObserver,
+  QueryObserverResult,
+} from '../query/core';
+import {
+  QueryFunctionWithObservable,
+  UseBaseQueryOptions,
+  UseQueryResult,
+} from '../types';
 
 @Injectable({
   providedIn: 'root',
@@ -15,10 +24,17 @@ export class UseBaseQueryService {
   public useBaseQuery<TData, TError, TQueryFnData, TQueryData>(
     options: UseBaseQueryOptions<TData, TError, TQueryFnData, TQueryData>
   ): Observable<UseQueryResult<TData, TError>> {
-    const optionsQueryFnDataPromise = this.getOptionsWithQueryFnDataPromise(options);
+    const optionsQueryFnDataPromise = this.getOptionsWithQueryFnDataPromise(
+      options
+    );
 
-    const defaultedOptions = this.queryClient.defaultQueryObserverOptions(optionsQueryFnDataPromise);
-    const observer = new QueryObserver<any, any, any, any>(this.queryClient, defaultedOptions);
+    const defaultedOptions = this.queryClient.defaultQueryObserverOptions(
+      optionsQueryFnDataPromise
+    );
+    const observer = new QueryObserver<any, any, any, any>(
+      this.queryClient,
+      defaultedOptions
+    );
 
     if (observer.hasListeners()) {
       observer.setOptions(defaultedOptions);
@@ -26,9 +42,9 @@ export class UseBaseQueryService {
 
     const currentResult = observer.getCurrentResult();
 
-    const subject: BehaviorSubject<QueryObserverResult<TData, TError>> = new BehaviorSubject<
+    const subject: BehaviorSubject<
       QueryObserverResult<TData, TError>
-    >(currentResult);
+    > = new BehaviorSubject<QueryObserverResult<TData, TError>>(currentResult);
 
     observer.subscribe((result) => subject.next(result));
 
@@ -43,7 +59,9 @@ export class UseBaseQueryService {
       queryFn: this.getQueryFnDataPromise(options.queryFn),
     };
   }
-  getQueryFnDataPromise<TQueryFnData>(queryFn: QueryFunctionWithObservable<TQueryFnData>): QueryFunction<TQueryFnData> {
+  getQueryFnDataPromise<TQueryFnData>(
+    queryFn: QueryFunctionWithObservable<TQueryFnData>
+  ): QueryFunction<TQueryFnData> {
     if (!queryFn) {
       return queryFn as QueryFunction<TQueryFnData>;
     }
