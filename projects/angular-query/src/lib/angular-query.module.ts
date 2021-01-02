@@ -8,10 +8,10 @@ import { UseQueryService } from './use-query/use-query.service';
   providers: [UseBaseQueryService, UseQueryService],
 })
 export class AngularQueryModule {
-  static forRoot(queryCache = new QueryCache(), queryClient = new QueryClient({ queryCache })) {
+  static forRoot(queryCache = new QueryCache(), queryClient = new QueryClient({ queryCache })): ModuleWithProviders<AngularQueryModule> {
     return {
-      ngModule: AngularQueryModule,
-      providers: [{ provide: QUERY_CLIENT, useValue: queryClient }],
+        ngModule: AngularQueryModule,
+        providers: [{ provide: QUERY_CLIENT, useValue: queryClient }],
     };
-  }
+}
 }
