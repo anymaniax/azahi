@@ -1,14 +1,15 @@
 import type { QueryBehavior } from './query';
-import type { InfiniteData, QueryOptions } from './types';
+import { isCancelable } from './retryer';
+import type { InfiniteData, QueryFunctionContext, QueryOptions } from './types';
 
 export function infiniteQueryBehavior<
-  TData,
+  TQueryFnData,
   TError,
-  TQueryFnData
->(): QueryBehavior<InfiniteData<TData>, TError, TQueryFnData> {
+  TData
+>(): QueryBehavior<TQueryFnData, TError, InfiniteData<TData>> {
   return {
     onFetch: (context) => {
-      context.queryFn = () => {
+      context.fetchFn = () => {
         const fetchMore = context.fetchOptions?.meta?.fetchMore;
         const pageParam = fetchMore?.pageParam;
         const isFetchingNextPage = fetchMore?.direction === 'forward';
@@ -32,14 +33,30 @@ export function infiniteQueryBehavior<
             return Promise.resolve(pages);
           }
 
-          return Promise.resolve()
-            .then(() => queryFn(...context.params, param))
-            .then((page) => {
-              newPageParams = previous
-                ? [param, ...newPageParams]
-                : [...newPageParams, param];
-              return previous ? [page, ...pages] : [...pages, page];
-            });
+          const queryFnContext: QueryFunctionContext = {
+            queryKey: context.queryKey,
+            pageParam: param,
+          };
+
+          let cancelFn: undefined | (() => any);
+          const queryFnResult = queryFn(queryFnContext);
+          if ((queryFnResult as any).cancel) {
+            cancelFn = (queryFnResult as any).cancel;
+          }
+
+          const promise = Promise.resolve(queryFnResult).then((page) => {
+            newPageParams = previous
+              ? [param, ...newPageParams]
+              : [...newPageParams, param];
+            return previous ? [page, ...pages] : [...pages, page];
+          });
+
+          if (cancelFn) {
+            const promiseAsAny = promise as any;
+            promiseAsAny.cancel = cancelFn;
+          }
+
+          return promise;
         };
 
         let promise;
@@ -88,7 +105,17 @@ export function infiniteQueryBehavior<
           }
         }
 
-        return promise.then((pages) => ({ pages, pageParams: newPageParams }));
+        const finalPromise = promise.then((pages) => ({
+          pages,
+          pageParams: newPageParams,
+        }));
+
+        if (isCancelable(promise)) {
+          const finalPromiseAsAny = finalPromise as any;
+          finalPromiseAsAny.cancel = promise.cancel;
+        }
+
+        return finalPromise;
       };
     },
   };
@@ -116,9 +143,14 @@ export function hasNextPage(
   options: QueryOptions<any, any>,
   pages?: unknown
 ): boolean | undefined {
-  return options.getNextPageParam && Array.isArray(pages)
-    ? typeof getNextPageParam(options, pages) !== 'undefined'
-    : undefined;
+  if (options.getNextPageParam && Array.isArray(pages)) {
+    const nextPageParam = getNextPageParam(options, pages);
+    return (
+      typeof nextPageParam !== 'undefined' &&
+      nextPageParam !== null &&
+      nextPageParam !== false
+    );
+  }
 }
 
 /**
@@ -129,7 +161,12 @@ export function hasPreviousPage(
   options: QueryOptions<any, any>,
   pages?: unknown
 ): boolean | undefined {
-  return options.getPreviousPageParam && Array.isArray(pages)
-    ? typeof getPreviousPageParam(options, pages) !== 'undefined'
-    : undefined;
+  if (options.getPreviousPageParam && Array.isArray(pages)) {
+    const previousPageParam = getPreviousPageParam(options, pages);
+    return (
+      typeof previousPageParam !== 'undefined' &&
+      previousPageParam !== null &&
+      previousPageParam !== false
+    );
+  }
 }

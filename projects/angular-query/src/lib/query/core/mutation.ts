@@ -64,7 +64,7 @@ interface SetStateAction<TData, TError, TVariables, TContext> {
   state: MutationState<TData, TError, TVariables, TContext>;
 }
 
-type Action<TData, TError, TVariables, TContext> =
+export type Action<TData, TError, TVariables, TContext> =
   | ContinueAction
   | ErrorAction<TError>
   | FailedAction
@@ -161,7 +161,7 @@ export class Mutation<
         this.options.onSuccess?.(
           data,
           this.state.variables!,
-          this.state.context
+          this.state.context!
         )
       )
       .then(() =>
@@ -177,7 +177,19 @@ export class Mutation<
         return data;
       })
       .catch((error) => {
+        // Notify cache callback
+        if (this.mutationCache.config.onError) {
+          this.mutationCache.config.onError(
+            error,
+            this.state.variables,
+            this.state.context,
+            this as Mutation<unknown, unknown, unknown, unknown>
+          );
+        }
+
+        // Log error
         getLogger().error(error);
+
         return Promise.resolve()
           .then(() =>
             this.options.onError?.(
@@ -230,7 +242,7 @@ export class Mutation<
 
     notifyManager.batch(() => {
       this.observers.forEach((observer) => {
-        observer.onMutationUpdate();
+        observer.onMutationUpdate(action);
       });
       this.mutationCache.notify(this);
     });

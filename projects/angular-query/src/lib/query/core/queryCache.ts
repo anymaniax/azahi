@@ -12,6 +12,10 @@ import { Subscribable } from './subscribable';
 
 // TYPES
 
+interface QueryCacheConfig {
+  onError?: (error: unknown, query: Query<unknown, unknown, unknown>) => void;
+}
+
 interface QueryHashMap {
   [hash: string]: Query<any, any>;
 }
@@ -21,25 +25,27 @@ type QueryCacheListener = (query?: Query) => void;
 // CLASS
 
 export class QueryCache extends Subscribable<QueryCacheListener> {
+  config: QueryCacheConfig;
+
   private queries: Query<any, any>[];
   private queriesMap: QueryHashMap;
 
-  constructor() {
+  constructor(config?: QueryCacheConfig) {
     super();
-
+    this.config = config || {};
     this.queries = [];
     this.queriesMap = {};
   }
 
-  build<TData, TError, TQueryFnData>(
+  build<TQueryFnData, TError, TData>(
     client: QueryClient,
-    options: QueryOptions<TData, TError, TQueryFnData>,
+    options: QueryOptions<TQueryFnData, TError, TData>,
     state?: QueryState<TData, TError>
-  ): Query<TData, TError, TQueryFnData> {
+  ): Query<TQueryFnData, TError, TData> {
     const hashFn = getQueryKeyHashFn(options);
     const queryKey = options.queryKey!;
     const queryHash = options.queryHash ?? hashFn(queryKey);
-    let query = this.get<TData, TError, TQueryFnData>(queryHash);
+    let query = this.get<TQueryFnData, TError, TData>(queryHash);
 
     if (!query) {
       query = new Query({
@@ -65,10 +71,17 @@ export class QueryCache extends Subscribable<QueryCacheListener> {
   }
 
   remove(query: Query<any, any>): void {
-    if (this.queriesMap[query.queryHash]) {
+    const queryInMap = this.queriesMap[query.queryHash];
+
+    if (queryInMap) {
       query.destroy();
-      delete this.queriesMap[query.queryHash];
+
       this.queries = this.queries.filter((x) => x !== query);
+
+      if (queryInMap === query) {
+        delete this.queriesMap[query.queryHash];
+      }
+
       this.notify(query);
     }
   }
@@ -81,9 +94,9 @@ export class QueryCache extends Subscribable<QueryCacheListener> {
     });
   }
 
-  get<TData = unknown, TError = unknown, TQueryFnData = TData>(
+  get<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     queryHash: string
-  ): Query<TData, TError, TQueryFnData> | undefined {
+  ): Query<TQueryFnData, TError, TData> | undefined {
     return this.queriesMap[queryHash];
   }
 
@@ -91,10 +104,10 @@ export class QueryCache extends Subscribable<QueryCacheListener> {
     return this.queries;
   }
 
-  find<TData = unknown, TError = unknown, TQueryFnData = TData>(
+  find<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     arg1: QueryKey,
     arg2?: QueryFilters
-  ): Query<TData, TError, TQueryFnData> | undefined {
+  ): Query<TQueryFnData, TError, TData> | undefined {
     const [filters] = parseFilterArgs(arg1, arg2);
     return this.queries.find((query) => matchQuery(filters, query));
   }

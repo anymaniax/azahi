@@ -9,10 +9,10 @@ import {
 } from './utils';
 import type {
   InitialDataFunction,
-  QueryFunction,
   QueryKey,
   QueryOptions,
   QueryStatus,
+  QueryFunctionContext,
 } from './types';
 import type { QueryCache } from './queryCache';
 import type { QueryObserver } from './queryObserver';
@@ -22,12 +22,12 @@ import { Retryer, CancelOptions, isCancelledError } from './retryer';
 
 // TYPES
 
-interface QueryConfig<TData, TError, TQueryFnData> {
+interface QueryConfig<TQueryFnData, TError, TData> {
   cache: QueryCache;
   queryKey: QueryKey;
   queryHash: string;
-  options?: QueryOptions<TData, TError, TQueryFnData>;
-  defaultOptions?: QueryOptions<TData, TError, TQueryFnData>;
+  options?: QueryOptions<TQueryFnData, TError, TData>;
+  defaultOptions?: QueryOptions<TQueryFnData, TError, TData>;
   state?: QueryState<TData, TError>;
 }
 
@@ -46,20 +46,20 @@ export interface QueryState<TData = unknown, TError = unknown> {
   status: QueryStatus;
 }
 
-export interface FetchContext<TData, TError, TQueryFnData> {
-  state: QueryState<TData, TError>;
-  options: QueryOptions<TData, TError, TQueryFnData>;
-  params: unknown[];
+export interface FetchContext<TQueryFnData, TError, TData> {
+  fetchFn: () => unknown | Promise<unknown>;
   fetchOptions?: FetchOptions;
-  queryFn: QueryFunction;
+  options: QueryOptions<TQueryFnData, TError, TData>;
+  queryKey: QueryKey;
+  state: QueryState<TData, TError>;
 }
 
 export interface QueryBehavior<
-  TData = unknown,
+  TQueryFnData = unknown,
   TError = unknown,
-  TQueryFnData = TData
+  TData = TQueryFnData
 > {
-  onFetch: (context: FetchContext<TData, TError, TQueryFnData>) => void;
+  onFetch: (context: FetchContext<TQueryFnData, TError, TData>) => void;
 }
 
 export interface FetchOptions {
@@ -83,7 +83,7 @@ interface FetchAction {
 interface SuccessAction<TData> {
   data: TData | undefined;
   type: 'success';
-  updatedAt?: number;
+  dataUpdatedAt?: number;
 }
 
 interface ErrorAction<TError> {
@@ -120,10 +120,15 @@ export type Action<TData, TError> =
 
 // CLASS
 
-export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
+export class Query<
+  TQueryFnData = unknown,
+  TError = unknown,
+  TData = TQueryFnData
+> {
   queryKey: QueryKey;
   queryHash: string;
-  options!: QueryOptions<TData, TError, TQueryFnData>;
+  options!: QueryOptions<TQueryFnData, TError, TData>;
+  initialState: QueryState<TData, TError>;
   state: QueryState<TData, TError>;
   cacheTime!: number;
 
@@ -132,21 +137,22 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
   private gcTimeout?: number;
   private retryer?: Retryer<unknown, TError>;
   private observers: QueryObserver<any, any, any, any>[];
-  private defaultOptions?: QueryOptions<TData, TError, TQueryFnData>;
+  private defaultOptions?: QueryOptions<TQueryFnData, TError, TData>;
 
-  constructor(config: QueryConfig<TData, TError, TQueryFnData>) {
+  constructor(config: QueryConfig<TQueryFnData, TError, TData>) {
     this.defaultOptions = config.defaultOptions;
     this.setOptions(config.options);
     this.observers = [];
     this.cache = config.cache;
     this.queryKey = config.queryKey;
     this.queryHash = config.queryHash;
-    this.state = config.state || this.getDefaultState(this.options);
+    this.initialState = config.state || this.getDefaultState(this.options);
+    this.state = this.initialState;
     this.scheduleGc();
   }
 
   private setOptions(
-    options?: QueryOptions<TData, TError, TQueryFnData>
+    options?: QueryOptions<TQueryFnData, TError, TData>
   ): void {
     this.options = { ...this.defaultOptions, ...options };
 
@@ -157,7 +163,7 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
     );
   }
 
-  setDefaultOptions(options: QueryOptions<TData, TError, TQueryFnData>): void {
+  setDefaultOptions(options: QueryOptions<TQueryFnData, TError, TData>): void {
     this.defaultOptions = options;
   }
 
@@ -166,9 +172,7 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
 
     if (isValidTimeout(this.cacheTime)) {
       this.gcTimeout = setTimeout(() => {
-        if (!this.observers.length) {
-          this.cache.remove(this);
-        }
+        this.optionalRemove();
       }, this.cacheTime);
     }
   }
@@ -176,6 +180,12 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
   private clearGcTimeout() {
     clearTimeout(this.gcTimeout);
     this.gcTimeout = undefined;
+  }
+
+  private optionalRemove() {
+    if (!this.observers.length && !this.state.isFetching) {
+      this.cache.remove(this);
+    }
   }
 
   setData(
@@ -187,21 +197,19 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
     // Get the new data
     let data = functionalUpdate(updater, prevData);
 
-    // Structurally share data between prev and new data if needed
-    if (this.options.structuralSharing !== false) {
-      data = replaceEqualDeep(prevData, data);
-    }
-
     // Use prev data if an isDataEqual function is defined and returns `true`
     if (this.options.isDataEqual?.(prevData, data)) {
       data = prevData as TData;
+    } else if (this.options.structuralSharing !== false) {
+      // Structurally share data between prev and new data if needed
+      data = replaceEqualDeep(prevData, data);
     }
 
     // Set data and mark it as cached
     this.dispatch({
       data,
       type: 'success',
-      updatedAt: options?.updatedAt,
+      dataUpdatedAt: options?.updatedAt,
     });
 
     return data;
@@ -220,6 +228,11 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
   destroy(): void {
     this.clearGcTimeout();
     this.cancel();
+  }
+
+  reset(): void {
+    this.destroy();
+    this.setState(this.initialState);
   }
 
   isActive(): boolean {
@@ -314,7 +327,7 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
   }
 
   fetch(
-    options?: QueryOptions<TData, TError, TQueryFnData>,
+    options?: QueryOptions<TQueryFnData, TError, TData>,
     fetchOptions?: FetchOptions
   ): Promise<TData> {
     if (this.state.isFetching)
@@ -340,25 +353,26 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
       }
     }
 
-    // Get the query function params
-    let params = ensureArray(this.queryKey);
+    // Create query function context
+    const queryKey = ensureArray(this.queryKey);
+    const queryFnContext: QueryFunctionContext = {
+      queryKey,
+      pageParam: undefined,
+    };
 
-    const filter = this.options.queryFnParamsFilter;
-    params = filter ? filter(params) : params;
-
-    // Get query function
-    const queryFn = () =>
+    // Create fetch function
+    const fetchFn = () =>
       this.options.queryFn
-        ? this.options.queryFn(...params)
+        ? this.options.queryFn(queryFnContext)
         : Promise.reject('Missing queryFn');
 
     // Trigger behavior hook
-    const context: FetchContext<TData, TError, TQueryFnData> = {
+    const context: FetchContext<TQueryFnData, TError, TData> = {
       fetchOptions,
       options: this.options,
-      params,
+      queryKey,
       state: this.state,
-      queryFn,
+      fetchFn,
     };
 
     if (this.options.behavior?.onFetch) {
@@ -375,7 +389,7 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
 
     // Try to fetch the data
     this.retryer = new Retryer({
-      fn: context.queryFn,
+      fn: context.fetchFn,
       onFail: () => {
         this.dispatch({ type: 'failed' });
       },
@@ -400,13 +414,31 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
           });
         }
 
-        // Log error
         if (!isCancelledError(error)) {
+          // Notify cache callback
+          if (this.cache.config.onError) {
+            this.cache.config.onError(error, this as Query);
+          }
+
+          // Log error
           getLogger().error(error);
+        }
+
+        // Remove query after fetching if cache time is 0
+        if (this.cacheTime === 0) {
+          this.optionalRemove();
         }
 
         // Propagate error
         throw error;
+      })
+      .then((data) => {
+        // Remove query after fetching if cache time is 0
+        if (this.cacheTime === 0) {
+          this.optionalRemove();
+        }
+
+        return data;
       });
 
     return this.promise;
@@ -425,24 +457,32 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
   }
 
   protected getDefaultState(
-    options: QueryOptions<TData, TError, TQueryFnData>
+    options: QueryOptions<TQueryFnData, TError, TData>
   ): QueryState<TData, TError> {
     const data =
       typeof options.initialData === 'function'
         ? (options.initialData as InitialDataFunction<TData>)()
         : options.initialData;
 
+    const hasInitialData = typeof options.initialData !== 'undefined';
+
+    const initialDataUpdatedAt =
+      hasInitialData &&
+      (typeof options.initialDataUpdatedAt === 'function'
+        ? (options.initialDataUpdatedAt as () => number | undefined)()
+        : options.initialDataUpdatedAt);
+
     const hasData = typeof data !== 'undefined';
 
     return {
       data,
       dataUpdateCount: 0,
-      dataUpdatedAt: hasData ? Date.now() : 0,
+      dataUpdatedAt: hasData ? initialDataUpdatedAt || Date.now() : 0,
       error: null,
       errorUpdateCount: 0,
       errorUpdatedAt: 0,
       fetchFailureCount: 0,
-      fetchMeta: undefined,
+      fetchMeta: null,
       isFetching: false,
       isInvalidated: false,
       isPaused: false,
@@ -474,17 +514,17 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
         return {
           ...state,
           fetchFailureCount: 0,
-          fetchMeta: action.meta,
+          fetchMeta: action.meta ?? null,
           isFetching: true,
           isPaused: false,
-          status: state.status === 'idle' ? 'loading' : state.status,
+          status: !state.dataUpdatedAt ? 'loading' : state.status,
         };
       case 'success':
         return {
           ...state,
           data: action.data,
           dataUpdateCount: state.dataUpdateCount + 1,
-          dataUpdatedAt: action.updatedAt ?? Date.now(),
+          dataUpdatedAt: action.dataUpdatedAt ?? Date.now(),
           error: null,
           fetchFailureCount: 0,
           isFetching: false,
@@ -496,12 +536,22 @@ export class Query<TData = unknown, TError = unknown, TQueryFnData = TData> {
         const error = action.error as unknown;
 
         if (isCancelledError(error) && error.revert) {
+          let previousStatus: QueryStatus;
+
+          if (!state.dataUpdatedAt && !state.errorUpdatedAt) {
+            previousStatus = 'idle';
+          } else if (state.dataUpdatedAt > state.errorUpdatedAt) {
+            previousStatus = 'success';
+          } else {
+            previousStatus = 'error';
+          }
+
           return {
             ...state,
             fetchFailureCount: 0,
             isFetching: false,
             isPaused: false,
-            status: state.status === 'loading' ? 'idle' : state.status,
+            status: previousStatus,
           };
         }
 

@@ -1,17 +1,15 @@
 import { Inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { QUERY_CLIENT } from '../angular-query.token';
+import { notifyManager } from '../query';
 import {
   QueryClient,
   QueryFunction,
   QueryObserver,
   QueryObserverResult,
 } from '../query/core';
-import {
-  QueryFunctionWithObservable,
-  UseBaseQueryOptions,
-  UseQueryResult,
-} from '../types';
+import { QueryFunctionWithObservable, UseBaseQueryOptions } from '../types';
+import { setBatchCalls } from '../utils';
 
 @Injectable({
   providedIn: 'root',
@@ -21,16 +19,20 @@ export class UseBaseQueryService {
     this.useBaseQuery = this.useBaseQuery.bind(this);
   }
 
-  public useBaseQuery<TData, TError, TQueryFnData, TQueryData>(
-    options: UseBaseQueryOptions<TData, TError, TQueryFnData, TQueryData>
-  ): Observable<UseQueryResult<TData, TError>> {
+  public useBaseQuery<TQueryFnData, TError, TData, TQueryData>(
+    options: UseBaseQueryOptions<TQueryFnData, TError, TData, TQueryData>
+  ) {
     const optionsQueryFnDataPromise = this.getOptionsWithQueryFnDataPromise(
       options
     );
 
-    const defaultedOptions = this.queryClient.defaultQueryObserverOptions(
+    let defaultedOptions = this.queryClient.defaultQueryObserverOptions(
       optionsQueryFnDataPromise
     );
+
+    // Include callbacks in batch renders
+    defaultedOptions = setBatchCalls(defaultedOptions);
+
     const observer = new QueryObserver<any, any, any, any>(
       this.queryClient,
       defaultedOptions
@@ -46,7 +48,9 @@ export class UseBaseQueryService {
       QueryObserverResult<TData, TError>
     > = new BehaviorSubject<QueryObserverResult<TData, TError>>(currentResult);
 
-    observer.subscribe((result) => subject.next(result));
+    observer.subscribe(
+      notifyManager.batchCalls((result) => subject.next(result))
+    );
 
     return subject.asObservable();
   }

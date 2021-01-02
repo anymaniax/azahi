@@ -88,7 +88,7 @@ export function timeUntilStale(updatedAt: number, staleTime?: number): number {
   return Math.max(updatedAt + (staleTime || 0) - Date.now(), 0);
 }
 
-export function parseQueryArgs<TOptions extends QueryOptions<any, any>>(
+export function parseQueryArgs<TOptions extends QueryOptions<any, any, any>>(
   arg1: QueryKey | TOptions,
   arg2?: QueryFunction<any> | TOptions,
   arg3?: TOptions
@@ -241,7 +241,7 @@ export function partialDeepEqual(a: any, b: any): boolean {
     return false;
   }
 
-  if (typeof a === 'object' && typeof b === 'object') {
+  if (a && b && typeof a === 'object' && typeof b === 'object') {
     return !Object.keys(b).some((key) => !partialDeepEqual(a[key], b[key]));
   }
 

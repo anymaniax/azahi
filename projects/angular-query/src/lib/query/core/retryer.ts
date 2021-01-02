@@ -32,7 +32,7 @@ interface Cancelable {
   cancel(): void;
 }
 
-function isCancelable(value: any): value is Cancelable {
+export function isCancelable(value: any): value is Cancelable {
   return typeof value?.cancel === 'function';
 }
 
@@ -69,7 +69,7 @@ export class Retryer<TData = unknown, TError = unknown> {
   constructor(config: RetryerConfig<TData, TError>) {
     let cancelRetry = false;
     let cancelFn: ((options?: CancelOptions) => void) | undefined;
-    let continueFn: (() => void) | undefined;
+    let continueFn: ((value?: unknown) => void) | undefined;
     let promiseResolve: (data: TData) => void;
     let promiseReject: (error: TError) => void;
 
