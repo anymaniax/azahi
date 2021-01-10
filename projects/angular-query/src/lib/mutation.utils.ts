@@ -1,5 +1,9 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { UseMutateFunction, UseMutationResult } from './types';
+import {
+  UseMutateAsyncFunction,
+  UseMutateFunction,
+  UseMutationResult,
+} from './types';
 
 export class MutateBehavierSubject<
   TData,
@@ -37,13 +41,21 @@ export class MutateObservable<
   TContext
 > extends Observable<UseMutationResult<TData, TError, TVariables, TContext>> {
   public mutate: UseMutateFunction<TData, TError, TVariables, TContext>;
+  public mutateAsync: UseMutateAsyncFunction<
+    TData,
+    TError,
+    TVariables,
+    TContext
+  >;
   public reset: () => void;
   constructor({
     mutate,
+    mutateAsync,
     reset,
   }: UseMutationResult<TData, TError, TVariables, TContext>) {
     super();
     this.mutate = mutate;
+    this.mutateAsync = mutateAsync;
     this.reset = reset;
   }
 }

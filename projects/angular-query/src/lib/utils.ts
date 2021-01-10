@@ -4,11 +4,7 @@ import {
   QueryFunction,
   QueryObserverOptions,
 } from './query-core';
-import {
-  QueryFunctionWithObservable,
-  UseBaseQueryOptions,
-  UseQueryOptions,
-} from './types';
+import { QueryFunctionWithObservable, UseQueryOptions } from './types';
 
 export const setBatchCalls = <Options extends QueryObserverOptions>(
   options: Options
@@ -37,7 +33,7 @@ export const getOptionsWithQueryFnDataPromise = <
   TQueryFnData,
   TQueryData
 >(
-  options: UseBaseQueryOptions<TData, TError, TQueryFnData, TQueryData>
+  options: QueryObserverOptions<TData, TError, TQueryFnData, TQueryData>
 ) => ({
   ...options,
   queryFn: getQueryFnDataPromise(options.queryFn),
