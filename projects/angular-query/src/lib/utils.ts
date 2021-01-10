@@ -1,4 +1,14 @@
-import { notifyManager, QueryObserverOptions } from './query-core';
+import { Observable } from 'rxjs';
+import {
+  notifyManager,
+  QueryFunction,
+  QueryObserverOptions,
+} from './query-core';
+import {
+  QueryFunctionWithObservable,
+  UseBaseQueryOptions,
+  UseQueryOptions,
+} from './types';
 
 export const setBatchCalls = <Options extends QueryObserverOptions>(
   options: Options
@@ -16,3 +26,40 @@ export const setBatchCalls = <Options extends QueryObserverOptions>(
   }
   return options;
 };
+
+export const getQueriesOptionsWithQueryFnDataPromise = (
+  queries: UseQueryOptions[]
+) => queries.map((options) => getOptionsWithQueryFnDataPromise(options));
+
+export const getOptionsWithQueryFnDataPromise = <
+  TData,
+  TError,
+  TQueryFnData,
+  TQueryData
+>(
+  options: UseBaseQueryOptions<TData, TError, TQueryFnData, TQueryData>
+) => ({
+  ...options,
+  queryFn: getQueryFnDataPromise(options.queryFn),
+});
+
+export const getQueryFnDataPromise = <TQueryFnData>(
+  queryFn: QueryFunctionWithObservable<TQueryFnData>
+): QueryFunction<TQueryFnData> => {
+  if (!queryFn) {
+    return queryFn as QueryFunction<TQueryFnData>;
+  }
+
+  return (...args) => {
+    const res = queryFn(...args);
+
+    if (isObservable<TQueryFnData>(res)) {
+      return res.toPromise();
+    }
+
+    return res;
+  };
+};
+
+export const isObservable = <T>(res: any): res is Observable<T> =>
+  !!res.toPromise && !!res.subscribe;

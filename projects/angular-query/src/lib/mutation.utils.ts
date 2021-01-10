@@ -1,5 +1,5 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { UseMutateFunction, UseMutationResult } from '../types';
+import { UseMutateFunction, UseMutationResult } from './types';
 
 export class MutateBehavierSubject<
   TData,

@@ -1,22 +1,20 @@
-import { Injectable } from '@angular/core';
-import { QueryClientService } from '../query-client/query-client.service';
+import { AngularQueryClient } from './angular-query-client';
+import { MutateBehavierSubject, MutateObservable } from './mutation.utils';
 import {
   MutationFunction,
   MutationKey,
   MutationObserver,
   notifyManager,
-} from '../query-core/core';
-import { noop, parseMutationArgs } from '../query-core/core/utils';
+} from './query-core/core';
+import { noop, parseMutationArgs } from './query-core/core/utils';
 import {
   UseMutateFunction,
   UseMutationOptions,
   UseMutationResult,
-} from '../types';
-import { MutateBehavierSubject, MutateObservable } from './mutation.utils';
+} from './types';
 
-@Injectable()
-export class MutationService {
-  constructor(private queryClient: QueryClientService) {}
+export class Mutation {
+  constructor(private queryClient: AngularQueryClient) {}
 
   use<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
     options: UseMutationOptions<TData, TError, TVariables, TContext>
