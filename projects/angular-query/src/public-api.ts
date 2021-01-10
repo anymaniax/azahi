@@ -2,6 +2,7 @@
  * Public API Surface of angular-query
  */
 
+export * from './lib/use-query-client/use-query-client.service';
 export * from './lib/angular-query.module';
 export * from './lib/query';
 export * from './lib/types';

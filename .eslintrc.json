@@ -21,7 +21,9 @@
           }
         ],
         "arrow-parens": ["off", "always"],
-        "import/order": "off"
+        "import/order": "off",
+        "@typescript-eslint/naming-convention": "off",
+        "@typescript-eslint/unified-signatures": "off"
       }
     },
     {

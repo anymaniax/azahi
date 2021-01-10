@@ -1,21 +1,20 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { QUERY_CLIENT } from '../angular-query.token';
 import { notifyManager } from '../query';
 import {
-  QueryClient,
   QueryFunction,
   QueryObserver,
   QueryObserverResult,
 } from '../query/core';
 import { QueryFunctionWithObservable, UseBaseQueryOptions } from '../types';
+import { UseQueryClientService } from '../use-query-client/use-query-client.service';
 import { setBatchCalls } from '../utils';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UseBaseQueryService {
-  constructor(@Inject(QUERY_CLIENT) private queryClient: QueryClient) {
+  constructor(private queryClient: UseQueryClientService) {
     this.useBaseQuery = this.useBaseQuery.bind(this);
   }
 
