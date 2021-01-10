@@ -1,12 +1,12 @@
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { QueryClient } from './query/core';
-import { UseBaseQueryService } from './use-base-query/use-base-query.service';
-import { UseMutationService } from './use-mutation/use-mutation.service';
-import { UseQueryClientService } from './use-query-client/use-query-client.service';
-import { UseQueryService } from './use-query/use-query.service';
+import { BaseQueryService } from './base-query/base-query.service';
+import { MutationService } from './mutation/mutation.service';
+import { QueryClientService } from './query-client/query-client.service';
+import { QueryClient } from './query-core/core';
+import { QueryService } from './query/query.service';
 
 @NgModule({
-  providers: [UseBaseQueryService, UseQueryService, UseMutationService],
+  providers: [BaseQueryService, QueryService, MutationService],
 })
 export class AngularQueryModule {
   static forRoot(
@@ -16,7 +16,7 @@ export class AngularQueryModule {
 
     return {
       ngModule: AngularQueryModule,
-      providers: [{ provide: UseQueryClientService, useValue: queryClient }],
+      providers: [{ provide: QueryClientService, useValue: queryClient }],
     };
   }
 }

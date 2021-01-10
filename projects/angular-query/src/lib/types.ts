@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { RetryDelayValue, RetryValue } from './query/core/retryer';
+import { RetryDelayValue, RetryValue } from './query-core/core/retryer';
 import {
   InfiniteQueryObserverOptions,
   InfiniteQueryObserverResult,
@@ -7,7 +7,7 @@ import {
   MutationStatus,
   QueryObserverOptions,
   QueryObserverResult,
-} from './query/core/types';
+} from './query-core/core/types';
 
 export type QueryFunctionWithObservable<T = unknown> = (
   ...args: any[]

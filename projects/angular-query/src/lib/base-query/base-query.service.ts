@@ -1,24 +1,22 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { notifyManager } from '../query';
+import { QueryClientService } from '../query-client/query-client.service';
+import { notifyManager } from '../query-core';
 import {
   QueryFunction,
   QueryObserver,
   QueryObserverResult,
-} from '../query/core';
+} from '../query-core/core';
 import { QueryFunctionWithObservable, UseBaseQueryOptions } from '../types';
-import { UseQueryClientService } from '../use-query-client/use-query-client.service';
 import { setBatchCalls } from '../utils';
 
-@Injectable({
-  providedIn: 'root',
-})
-export class UseBaseQueryService {
-  constructor(private queryClient: UseQueryClientService) {
-    this.useBaseQuery = this.useBaseQuery.bind(this);
+@Injectable()
+export class BaseQueryService {
+  constructor(private queryClient: QueryClientService) {
+    this.use = this.use.bind(this);
   }
 
-  public useBaseQuery<TQueryFnData, TError, TData, TQueryData>(
+  public use<TQueryFnData, TError, TData, TQueryData>(
     options: UseBaseQueryOptions<TQueryFnData, TError, TData, TQueryData>
   ) {
     const optionsQueryFnDataPromise = this.getOptionsWithQueryFnDataPromise(

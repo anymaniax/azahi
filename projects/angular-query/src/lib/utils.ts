@@ -1,4 +1,4 @@
-import { notifyManager, QueryObserverOptions } from './query';
+import { notifyManager, QueryObserverOptions } from './query-core';
 
 export const setBatchCalls = <Options extends QueryObserverOptions>(
   options: Options

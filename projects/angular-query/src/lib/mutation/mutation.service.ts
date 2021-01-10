@@ -1,67 +1,40 @@
 import { Injectable } from '@angular/core';
+import { QueryClientService } from '../query-client/query-client.service';
 import {
   MutationFunction,
   MutationKey,
   MutationObserver,
   notifyManager,
-} from '../query/core';
-import { noop, parseMutationArgs } from '../query/core/utils';
+} from '../query-core/core';
+import { noop, parseMutationArgs } from '../query-core/core/utils';
 import {
   UseMutateFunction,
   UseMutationOptions,
   UseMutationResult,
 } from '../types';
-import { UseQueryClientService } from '../use-query-client/use-query-client.service';
-import { MutateBehavierSubject, MutateObservable } from './use-mutation.utils';
+import { MutateBehavierSubject, MutateObservable } from './mutation.utils';
 
-@Injectable({
-  providedIn: 'root',
-})
-export class UseMutationService {
-  constructor(private queryClient: UseQueryClientService) {}
+@Injectable()
+export class MutationService {
+  constructor(private queryClient: QueryClientService) {}
 
-  useMutation<
-    TData = unknown,
-    TError = unknown,
-    TVariables = void,
-    TContext = unknown
-  >(
+  use<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
     options: UseMutationOptions<TData, TError, TVariables, TContext>
   ): MutateObservable<TData, TError, TVariables, TContext>;
-  useMutation<
-    TData = unknown,
-    TError = unknown,
-    TVariables = void,
-    TContext = unknown
-  >(
+  use<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
     mutationFn: MutationFunction<TData, TVariables>,
     options?: UseMutationOptions<TData, TError, TVariables, TContext>
   ): MutateObservable<TData, TError, TVariables, TContext>;
-  useMutation<
-    TData = unknown,
-    TError = unknown,
-    TVariables = void,
-    TContext = unknown
-  >(
+  use<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
     mutationKey: MutationKey,
     options?: UseMutationOptions<TData, TError, TVariables, TContext>
   ): MutateObservable<TData, TError, TVariables, TContext>;
-  useMutation<
-    TData = unknown,
-    TError = unknown,
-    TVariables = void,
-    TContext = unknown
-  >(
+  use<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
     mutationKey: MutationKey,
     mutationFn?: MutationFunction<TData, TVariables>,
     options?: UseMutationOptions<TData, TError, TVariables, TContext>
   ): MutateObservable<TData, TError, TVariables, TContext>;
-  useMutation<
-    TData = unknown,
-    TError = unknown,
-    TVariables = void,
-    TContext = unknown
-  >(
+  use<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
     arg1:
       | MutationKey
       | MutationFunction<TData, TVariables>

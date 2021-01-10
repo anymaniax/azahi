@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { UseMutationService } from './use-mutation.service';
+import { QueryService } from './query.service';
 
-describe('AngularUseMutationService', () => {
+describe('QueryService', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
 
   it('should be created', () => {
-    const service: UseMutationService = TestBed.inject(UseMutationService);
+    const service: QueryService = TestBed.inject(QueryService);
     expect(service).toBeTruthy();
   });
 });

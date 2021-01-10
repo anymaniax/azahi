@@ -23,7 +23,8 @@
         "arrow-parens": ["off", "always"],
         "import/order": "off",
         "@typescript-eslint/naming-convention": "off",
-        "@typescript-eslint/unified-signatures": "off"
+        "@typescript-eslint/unified-signatures": "off",
+        "@typescript-eslint/member-ordering": "off"
       }
     },
     {

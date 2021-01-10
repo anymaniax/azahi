@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { QueryObserverResult, UseQueryService } from 'angular-query';
+import { QueryObserverResult, QueryService } from 'angular-query';
 import { Observable } from 'rxjs';
 
 interface RepoInformation {
@@ -19,13 +19,10 @@ interface RepoInformation {
 export class AppComponent implements OnInit {
   public repoData$: Observable<QueryObserverResult<RepoInformation>>;
 
-  constructor(
-    private useQueryService: UseQueryService,
-    private http: HttpClient
-  ) {}
+  constructor(private query: QueryService, private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.repoData$ = this.useQueryService.useQuery('repoData', () =>
+    this.repoData$ = this.query.use('repoData', () =>
       this.http.get<RepoInformation>(
         'https://api.github.com/repos/tannerlinsley/react-query'
       )
