@@ -1,6 +1,6 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { UseQueryResult } from '../../../../dist/angular-query/lib/types';
 import { RefetchOptions } from './query-core';
+import { UseQueryResult } from './types';
 
 export class QueryBehavierSubject<TData, TError> extends BehaviorSubject<
   UseQueryResult<TData, TError>
