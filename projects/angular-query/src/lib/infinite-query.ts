@@ -1,7 +1,7 @@
 import { AngularQueryClient } from './angular-query-client';
 import {
-  InfiniteBehavierSubject,
-  InfiniteObservable,
+  InfiniteQueryBehavierSubject,
+  InfiniteQueryObservable,
 } from './infinite-query.utils';
 import {
   InfiniteQueryObserver,
@@ -17,23 +17,23 @@ export class InfiniteQuery {
   constructor(private queryClient: AngularQueryClient) {}
   use<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     options: UseInfiniteQueryOptions<TQueryFnData, TError, TData>
-  ): InfiniteObservable<TData, TError>;
+  ): InfiniteQueryObservable<TData, TError>;
   use<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     queryKey: QueryKey,
     options?: UseInfiniteQueryOptions<TQueryFnData, TError, TData>
-  ): InfiniteObservable<TData, TError>;
+  ): InfiniteQueryObservable<TData, TError>;
   use<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     queryKey: QueryKey,
     queryFn: QueryFunction<TQueryFnData>,
     options?: UseInfiniteQueryOptions<TQueryFnData, TError, TData>
-  ): InfiniteObservable<TData, TError>;
+  ): InfiniteQueryObservable<TData, TError>;
   use<TQueryFnData, TError, TData = TQueryFnData>(
     arg1: QueryKey | UseInfiniteQueryOptions<TQueryFnData, TError, TData>,
     arg2?:
       | QueryFunction<TQueryFnData>
       | UseInfiniteQueryOptions<TQueryFnData, TError, TData>,
     arg3?: UseInfiniteQueryOptions<TQueryFnData, TError, TData>
-  ): InfiniteObservable<TData, TError> {
+  ): InfiniteQueryObservable<TData, TError> {
     const parsedOptions = parseQueryArgs(arg1, arg2, arg3);
 
     const optionsQueryFnDataPromise = getOptionsWithQueryFnDataPromise(
@@ -53,7 +53,9 @@ export class InfiniteQuery {
 
     const currentResult = observer.getCurrentResult();
 
-    const subject = new InfiniteBehavierSubject<TData, TError>(currentResult);
+    const subject = new InfiniteQueryBehavierSubject<TData, TError>(
+      currentResult
+    );
 
     observer.subscribe(
       notifyManager.batchCalls((result) => subject.next(result))

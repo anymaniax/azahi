@@ -1,5 +1,5 @@
 import { AngularQueryClient } from './angular-query-client';
-import { MutateBehavierSubject, MutateObservable } from './mutation.utils';
+import { MutationBehavierSubject, MutationObservable } from './mutation.utils';
 import {
   MutationFunction,
   MutationKey,
@@ -18,20 +18,20 @@ export class Mutation {
 
   use<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
     options: UseMutationOptions<TData, TError, TVariables, TContext>
-  ): MutateObservable<TData, TError, TVariables, TContext>;
+  ): MutationObservable<TData, TError, TVariables, TContext>;
   use<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
     mutationFn: MutationFunction<TData, TVariables>,
     options?: UseMutationOptions<TData, TError, TVariables, TContext>
-  ): MutateObservable<TData, TError, TVariables, TContext>;
+  ): MutationObservable<TData, TError, TVariables, TContext>;
   use<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
     mutationKey: MutationKey,
     options?: UseMutationOptions<TData, TError, TVariables, TContext>
-  ): MutateObservable<TData, TError, TVariables, TContext>;
+  ): MutationObservable<TData, TError, TVariables, TContext>;
   use<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
     mutationKey: MutationKey,
     mutationFn?: MutationFunction<TData, TVariables>,
     options?: UseMutationOptions<TData, TError, TVariables, TContext>
-  ): MutateObservable<TData, TError, TVariables, TContext>;
+  ): MutationObservable<TData, TError, TVariables, TContext>;
   use<TData = unknown, TError = unknown, TVariables = void, TContext = unknown>(
     arg1:
       | MutationKey
@@ -41,7 +41,7 @@ export class Mutation {
       | MutationFunction<TData, TVariables>
       | UseMutationOptions<TData, TError, TVariables, TContext>,
     arg3?: UseMutationOptions<TData, TError, TVariables, TContext>
-  ): MutateObservable<TData, TError, TVariables, TContext> {
+  ): MutationObservable<TData, TError, TVariables, TContext> {
     const options = parseMutationArgs(arg1, arg2, arg3);
 
     const observer = new MutationObserver(this.queryClient, options);
@@ -65,7 +65,7 @@ export class Mutation {
       mutateAsync: initialResult.mutate,
     };
 
-    const state$ = new MutateBehavierSubject<
+    const state$ = new MutationBehavierSubject<
       TData,
       TError,
       TVariables,

@@ -5,7 +5,7 @@ import {
   UseMutationResult,
 } from './types';
 
-export class MutateBehavierSubject<
+export class MutationBehavierSubject<
   TData,
   TError,
   TVariables,
@@ -17,13 +17,13 @@ export class MutateBehavierSubject<
     super(value);
   }
 
-  asObservableWithMutate(): MutateObservable<
+  asObservableWithMutate(): MutationObservable<
     TData,
     TError,
     TVariables,
     TContext
   > {
-    const observable: any = new MutateObservable<
+    const observable: any = new MutationObservable<
       TData,
       TError,
       TVariables,
@@ -34,7 +34,7 @@ export class MutateBehavierSubject<
   }
 }
 
-export class MutateObservable<
+export class MutationObservable<
   TData,
   TError,
   TVariables,

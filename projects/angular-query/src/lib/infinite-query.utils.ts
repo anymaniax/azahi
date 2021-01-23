@@ -8,21 +8,24 @@ import {
   RefetchOptions,
 } from './query-core';
 
-export class InfiniteBehavierSubject<TData, TError> extends BehaviorSubject<
-  InfiniteQueryObserverResult<TData, TError>
-> {
+export class InfiniteQueryBehavierSubject<
+  TData,
+  TError
+> extends BehaviorSubject<InfiniteQueryObserverResult<TData, TError>> {
   constructor(value: InfiniteQueryObserverResult<TData, TError>) {
     super(value);
   }
 
-  asObservableWithInfinite(): InfiniteObservable<TData, TError> {
-    const observable: any = new InfiniteObservable<TData, TError>(this.value);
+  asObservableWithInfinite(): InfiniteQueryObservable<TData, TError> {
+    const observable: any = new InfiniteQueryObservable<TData, TError>(
+      this.value
+    );
     observable.source = this;
     return observable;
   }
 }
 
-export class InfiniteObservable<TData, TError> extends Observable<
+export class InfiniteQueryObservable<TData, TError> extends Observable<
   InfiniteQueryObserverResult<TData, TError>
 > {
   public fetchNextPage: (
