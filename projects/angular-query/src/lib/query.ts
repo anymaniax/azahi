@@ -1,8 +1,12 @@
 import { AngularQueryClient } from './angular-query-client';
 import { notifyManager, QueryKey, QueryObserver } from './query-core';
 import { parseQueryArgs } from './query-core/core/utils';
-import { QueryBehavierSubject, QueryObservable } from './query.utils';
-import { QueryFunctionWithObservable, UseQueryOptions } from './types';
+import { QueryBehaviorSubject } from './query.utils';
+import {
+  QueryFunctionWithObservable,
+  UseQueryObservable,
+  UseQueryOptions,
+} from './types';
 import { getOptionsWithQueryFnDataPromise, setBatchCalls } from './utils';
 
 export class Query {
@@ -10,23 +14,23 @@ export class Query {
 
   public use<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     options: UseQueryOptions<TQueryFnData, TError, TData>
-  ): QueryObservable<TData, TError>;
+  ): UseQueryObservable<TData, TError>;
   use<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     queryKey: QueryKey,
     options?: UseQueryOptions<TQueryFnData, TError, TData>
-  ): QueryObservable<TData, TError>;
+  ): UseQueryObservable<TData, TError>;
   use<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     queryKey: QueryKey,
     queryFn: QueryFunctionWithObservable<TQueryFnData>,
     options?: UseQueryOptions<TQueryFnData, TError, TData>
-  ): QueryObservable<TData, TError>;
+  ): UseQueryObservable<TData, TError>;
   use<TQueryFnData, TError, TData = TQueryFnData>(
     arg1: QueryKey | UseQueryOptions<TQueryFnData, TError, TData>,
     arg2?:
       | QueryFunctionWithObservable<TQueryFnData>
       | UseQueryOptions<TQueryFnData, TError, TData>,
     arg3?: UseQueryOptions<TQueryFnData, TError, TData>
-  ): QueryObservable<TData, TError> {
+  ): UseQueryObservable<TData, TError> {
     const parsedOptions = parseQueryArgs(arg1, arg2, arg3);
 
     const optionsQueryFnDataPromise = getOptionsWithQueryFnDataPromise(
@@ -51,10 +55,7 @@ export class Query {
 
     const currentResult = observer.getCurrentResult();
 
-    const subject: QueryBehavierSubject<
-      TData,
-      TError
-    > = new QueryBehavierSubject<TData, TError>(currentResult);
+    const subject = new QueryBehaviorSubject<TData, TError>(currentResult);
 
     observer.subscribe(
       notifyManager.batchCalls((result) => subject.next(result))

@@ -1,4 +1,6 @@
 import { Observable } from 'rxjs';
+import { InfiniteQueryObservable } from './infinite-query.utils';
+import { MutationObservable } from './mutation.utils';
 import { RetryDelayValue, RetryValue } from './query-core/core/retryer';
 import {
   InfiniteQueryObserverOptions,
@@ -8,6 +10,7 @@ import {
   QueryObserverOptions,
   QueryObserverResult,
 } from './query-core/core/types';
+import { QueryObservable } from './query.utils';
 
 export type QueryFunctionWithObservable<T = unknown> = (
   ...args: any[]
@@ -82,6 +85,11 @@ export interface UseMutationOptions<
   useErrorBoundary?: boolean;
 }
 
+export type MutationFunctionObservable<
+  TData = unknown,
+  TVariables = unknown
+> = (variables: TVariables) => Promise<TData> | Observable<TData>;
+
 export type UseMutateFunction<
   TData = unknown,
   TError = unknown,
@@ -123,3 +131,20 @@ export interface UseMutationResult<
   status: MutationStatus;
   variables: TVariables | undefined;
 }
+
+export type UseQueryObservable<
+  TData = unknown,
+  TError = unknown
+> = QueryObservable<UseQueryResult<TData, TError>>;
+
+export type UseMutationObservable<
+  TData = unknown,
+  TError = unknown,
+  TVariables = unknown,
+  TContext = unknown
+> = MutationObservable<UseMutationResult<TData, TError, TVariables, TContext>>;
+
+export type UseInfiniteQueryObservable<
+  TData = unknown,
+  TError = unknown
+> = InfiniteQueryObservable<InfiniteQueryObserverResult<TData, TError>>;

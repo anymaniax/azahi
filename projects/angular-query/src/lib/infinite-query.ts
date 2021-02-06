@@ -1,8 +1,5 @@
 import { AngularQueryClient } from './angular-query-client';
-import {
-  InfiniteQueryBehavierSubject,
-  InfiniteQueryObservable,
-} from './infinite-query.utils';
+import { InfiniteQueryBehavierSubject } from './infinite-query.utils';
 import {
   InfiniteQueryObserver,
   notifyManager,
@@ -10,30 +7,30 @@ import {
   QueryKey,
 } from './query-core';
 import { parseQueryArgs } from './query-core/core/utils';
-import { UseInfiniteQueryOptions } from './types';
+import { UseInfiniteQueryObservable, UseInfiniteQueryOptions } from './types';
 import { getOptionsWithQueryFnDataPromise, setBatchCalls } from './utils';
 
 export class InfiniteQuery {
   constructor(private queryClient: AngularQueryClient) {}
   use<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     options: UseInfiniteQueryOptions<TQueryFnData, TError, TData>
-  ): InfiniteQueryObservable<TData, TError>;
+  ): UseInfiniteQueryObservable<TData, TError>;
   use<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     queryKey: QueryKey,
     options?: UseInfiniteQueryOptions<TQueryFnData, TError, TData>
-  ): InfiniteQueryObservable<TData, TError>;
+  ): UseInfiniteQueryObservable<TData, TError>;
   use<TQueryFnData = unknown, TError = unknown, TData = TQueryFnData>(
     queryKey: QueryKey,
     queryFn: QueryFunction<TQueryFnData>,
     options?: UseInfiniteQueryOptions<TQueryFnData, TError, TData>
-  ): InfiniteQueryObservable<TData, TError>;
+  ): UseInfiniteQueryObservable<TData, TError>;
   use<TQueryFnData, TError, TData = TQueryFnData>(
     arg1: QueryKey | UseInfiniteQueryOptions<TQueryFnData, TError, TData>,
     arg2?:
       | QueryFunction<TQueryFnData>
       | UseInfiniteQueryOptions<TQueryFnData, TError, TData>,
     arg3?: UseInfiniteQueryOptions<TQueryFnData, TError, TData>
-  ): InfiniteQueryObservable<TData, TError> {
+  ): UseInfiniteQueryObservable<TData, TError> {
     const parsedOptions = parseQueryArgs(arg1, arg2, arg3);
 
     const optionsQueryFnDataPromise = getOptionsWithQueryFnDataPromise(

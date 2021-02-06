@@ -1,15 +1,11 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import {
-  UseMutateAsyncFunction,
-  UseMutateFunction,
-  UseMutationResult,
-} from './types';
+import { UseMutationResult } from './types';
 
 export class MutationBehavierSubject<
-  TData,
-  TError,
-  TVariables,
-  TContext
+  TData = unknown,
+  TError = unknown,
+  TVariables = unknown,
+  TContext = unknown
 > extends BehaviorSubject<
   UseMutationResult<TData, TError, TVariables, TContext>
 > {
@@ -18,16 +14,10 @@ export class MutationBehavierSubject<
   }
 
   asObservableWithMutate(): MutationObservable<
-    TData,
-    TError,
-    TVariables,
-    TContext
+    UseMutationResult<TData, TError, TVariables, TContext>
   > {
     const observable: any = new MutationObservable<
-      TData,
-      TError,
-      TVariables,
-      TContext
+      UseMutationResult<TData, TError, TVariables, TContext>
     >(this.value);
     observable.source = this;
     return observable;
@@ -35,24 +25,12 @@ export class MutationBehavierSubject<
 }
 
 export class MutationObservable<
-  TData,
-  TError,
-  TVariables,
-  TContext
-> extends Observable<UseMutationResult<TData, TError, TVariables, TContext>> {
-  public mutate: UseMutateFunction<TData, TError, TVariables, TContext>;
-  public mutateAsync: UseMutateAsyncFunction<
-    TData,
-    TError,
-    TVariables,
-    TContext
-  >;
-  public reset: () => void;
-  constructor({
-    mutate,
-    mutateAsync,
-    reset,
-  }: UseMutationResult<TData, TError, TVariables, TContext>) {
+  Result extends UseMutationResult = UseMutationResult
+> extends Observable<Result> {
+  public mutate: Result['mutate'];
+  public mutateAsync: Result['mutateAsync'];
+  public reset: Result['reset'];
+  constructor({ mutate, mutateAsync, reset }: Result) {
     super();
     this.mutate = mutate;
     this.mutateAsync = mutateAsync;

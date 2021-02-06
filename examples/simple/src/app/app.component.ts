@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { AngularQuery, QueryObserverResult } from 'angular-query';
-import { Observable } from 'rxjs';
+import { AngularQuery, UseQueryObservable } from 'angular-query';
 
 interface RepoInformation {
   name: string;
@@ -17,7 +16,7 @@ interface RepoInformation {
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  public repoData$: Observable<QueryObserverResult<RepoInformation>>;
+  public repoData$: UseQueryObservable<RepoInformation>;
 
   constructor(private query: AngularQuery, private http: HttpClient) {}
 
