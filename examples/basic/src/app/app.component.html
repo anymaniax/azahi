@@ -1,0 +1,19 @@
+<p>
+  As you visit the posts below, you will notice them in a loading state the
+  first time you load them. However, after you return to this list and click on
+  any posts you have already visited again, you will see them load instantly and
+  background refresh right before your eyes!
+  <strong>
+    (You may need to throttle your network speed to simulate longer loading
+    sequences)
+  </strong>
+</p>
+
+<app-post
+  *ngIf="postId > -1; else posts"
+  [postId]="postId"
+  [setPostId]="setPostId"
+></app-post>
+<ng-template #posts>
+  <app-posts [setPostId]="setPostId"></app-posts>
+</ng-template>

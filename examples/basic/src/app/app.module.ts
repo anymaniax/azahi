@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { AzahiModule, QueryClient } from 'azahi';
 import { AppComponent } from './app.component';
+import { PostComponent } from './post/post.component';
+import { PostsComponent } from './posts/posts.component';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,7 +16,7 @@ const queryClient = new QueryClient({
 });
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [AppComponent, PostsComponent, PostComponent],
   imports: [
     BrowserModule,
     HttpClientModule,

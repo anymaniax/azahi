@@ -1,19 +1,18 @@
-<ng-container *ngIf="repoData$ | async as repoData">
-  <ng-container *ngIf="repoData.isLoading; then loading; else loaded"></ng-container>
-  <ng-template #loading>
+<ng-container *ngIf="repoDataQuery$ | async as query">
+  <ng-container *ngIf="query.isLoading; else loaded">
     <p>Loading...</p>
-  </ng-template>
+  </ng-container>
   <ng-template #loaded>
-    <ng-container *ngIf="repoData.error; else valid">
-      An error has occurred: {{ repoData.error['message'] }}
+    <ng-container *ngIf="query.error; else valid">
+      An error has occurred: {{ query.error['message'] }}
     </ng-container>
     <ng-template #valid>
       <div>
-        <h1>{{ repoData.data.name }}</h1>
-        <p>{{ repoData.data.description }}</p>
-        <strong>👀 {{ repoData.data.subscribers_count }}</strong>
-        <strong>✨ {{ repoData.data.stargazers_count }}</strong>
-        <strong>🍴 {{ repoData.data.forks_count }}</strong>
+        <h1>{{ query.data.name }}</h1>
+        <p>{{ query.data.description }}</p>
+        <strong>👀 {{ query.data.subscribers_count }}</strong>
+        <strong>✨ {{ query.data.stargazers_count }}</strong>
+        <strong>🍴 {{ query.data.forks_count }}</strong>
       </div>
     </ng-template>
   </ng-template>

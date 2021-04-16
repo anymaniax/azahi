@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { AngularQuery, UseQueryObservable } from 'angular-query';
+import { Azahi, UseQueryResult } from 'azahi';
+import { Observable } from 'rxjs';
 
 interface RepoInformation {
   name: string;
@@ -16,14 +17,14 @@ interface RepoInformation {
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  public repoData$: UseQueryObservable<RepoInformation>;
+  public repoDataQuery$: Observable<UseQueryResult<RepoInformation>>;
 
-  constructor(private query: AngularQuery, private http: HttpClient) {}
+  constructor(private azahi: Azahi, private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.repoData$ = this.query.useQuery('repoData', () =>
+    this.repoDataQuery$ = this.azahi.useQuery('repoData', () =>
       this.http.get<RepoInformation>(
-        'https://api.github.com/repos/tannerlinsley/react-query'
+        'https://api.github.com/repos/anymaniax/angular-query'
       )
     );
   }

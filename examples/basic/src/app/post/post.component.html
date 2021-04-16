@@ -1,0 +1,19 @@
+<div>
+  <div>
+    <button type="button" (click)="setPostId(-1)">Back</button>
+  </div>
+  <ng-container *ngIf="postQuery$ | async as query">
+    <ng-container *ngIf="query.isLoading; else loaded">
+      <p>Loading...</p>
+    </ng-container>
+    <ng-template #loaded>
+      <ng-container *ngIf="query.error; else valid">
+        An error has occurred: {{ query.error['message'] }}
+      </ng-container>
+      <ng-template #valid>
+        <h1>{{ query.data.title }}</h1>
+        <div>{{ query.isFetching ? 'Background Updating...' : ' ' }}</div>
+      </ng-template>
+    </ng-template>
+  </ng-container>
+</div>

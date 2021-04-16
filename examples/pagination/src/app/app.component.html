@@ -1,0 +1,35 @@
+<p>
+  In this example, each page of data remains visible as the next page is
+  fetched. The buttons and capability to proceed to the next page are also
+  supressed until the next page cursor is known. Each page is cached as a normal
+  query too, so when going to previous pages, you'll see them instantaneously
+  while they are also refetched invisibly in the background.
+</p>
+
+<ng-container *ngIf="projects$ | async as query">
+  <ng-container *ngIf="query.isLoading; else loaded">
+    <p>Loading...</p>
+  </ng-container>
+  <ng-template #loaded>
+    <ng-container *ngIf="query.error; else valid">
+      An error has occurred: {{ query.error['message'] }}
+    </ng-container>
+    <ng-template #valid>
+      <div *ngFor="let project of query.data.projects">
+        <p>{{ project.name }}</p>
+      </div>
+      <div>Current Page: {{ page + 1 }}</div>
+      <button (click)="pageChange$.next(page - 1)" [disabled]="page === 0">
+        Previous Page
+      </button>
+      <button
+        (click)="pageChange$.next(page + 1)"
+        [disabled]="query.isPreviousData || !query.data?.hasMore"
+      >
+        Next Page
+      </button>
+
+      <div>{{ query.isFetching ? 'Loading...' : ' ' }}</div>
+    </ng-template>
+  </ng-template>
+</ng-container>

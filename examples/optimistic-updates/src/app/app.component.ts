@@ -1,11 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import {
-  AngularQuery,
-  AngularQueryClient,
-  UseMutationObservable,
-  UseQueryObservable,
-} from 'angular-query';
+import { Azahi, UseMutationObservable, UseQueryObservable } from 'azahi';
 
 @Component({
   selector: 'app-root',
@@ -17,30 +12,26 @@ export class AppComponent implements OnInit {
   public todos$: UseQueryObservable<{ items: string[] }>;
   public addTodoMutation$: UseMutationObservable;
 
-  constructor(
-    private query: AngularQuery,
-    private queryClient: AngularQueryClient,
-    private http: HttpClient
-  ) {}
+  constructor(private azahi: Azahi, private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.todos$ = this.query.useQuery('todos', () =>
+    this.todos$ = this.azahi.useQuery('todos', () =>
       this.http.get('/api/data')
     );
 
-    this.addTodoMutation$ = this.query.useMutation(
+    this.addTodoMutation$ = this.azahi.useMutation(
       (text: string) => this.http.post('/api/data', text),
       {
         // Optimistically update the cache value on mutate, but store
         // the old value and return it so that it's accessible in case of
         // an error
-        onMutate: async (text) => {
+        onMutate: (text) => {
           this.text = '';
-          await this.queryClient.cancelQueries('todos');
+          this.azahi.queryClient.cancelQueries('todos');
 
-          const previousValue = this.queryClient.getQueryData('todos');
+          const previousValue = this.azahi.queryClient.getQueryData('todos');
 
-          this.queryClient.setQueryData(
+          this.azahi.queryClient.setQueryData(
             'todos',
             (old: { items: string[] }) => ({
               ...old,
@@ -52,11 +43,11 @@ export class AppComponent implements OnInit {
         },
         // On failure, roll back to the previous value
         onError: (err, variables, previousValue) => {
-          this.queryClient.setQueryData('todos', previousValue);
+          this.azahi.queryClient.setQueryData('todos', previousValue);
         },
         // After success or failure, refetch the todos query
         onSuccess: () => {
-          this.queryClient.invalidateQueries('todos');
+          this.azahi.queryClient.invalidateQueries('todos');
         },
       }
     );

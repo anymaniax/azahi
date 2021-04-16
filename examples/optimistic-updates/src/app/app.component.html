@@ -7,29 +7,31 @@
     the previous list of items is restored and the list is again refetched from
     the server.
   </p>
+
   <form (submit)="onSubmit($event)">
     <input type="text" name="todo" [(ngModel)]="text" />
     <button>
       {{ (addTodoMutation$ | async).isLoading ? 'Creating...' : 'Create' }}
     </button>
   </form>
+
   <br />
-  <ng-container *ngIf="todos$ | async as todos">
+  <ng-container *ngIf="todos$ | async as query">
     <ng-container
-      *ngIf="todos.isLoading; then loading; else loaded"
+      *ngIf="query.isLoading; then loading; else loaded"
     ></ng-container>
     <ng-template #loading>
       <p>Loading...</p>
     </ng-template>
     <ng-template #loaded>
-      <ng-container *ngIf="todos.error; else valid">
-        An error has occurred: {{ todos.error['message'] }}
+      <ng-container *ngIf="query.error; else valid">
+        An error has occurred: {{ query.error['message'] }}
       </ng-container>
       <ng-template #valid>
         <ul>
-          <li *ngFor="let item of todos.data.items">{{ item }}</li>
+          <li *ngFor="let item of query.data.items">{{ item }}</li>
         </ul>
-        <div>{{ todos.isFetching ? 'Updating in background...' : ' ' }}</div>
+        <div>{{ query.isFetching ? 'Updating in background...' : ' ' }}</div>
       </ng-template>
     </ng-template>
   </ng-container>

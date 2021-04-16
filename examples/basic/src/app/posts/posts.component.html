@@ -1,0 +1,27 @@
+<div>
+  <h1>Posts</h1>
+  <div>
+    <ng-container *ngIf="postsQuery$ | async as query">
+      <ng-container *ngIf="query.isLoading; else loaded">
+        <p>Loading...</p>
+      </ng-container>
+      <ng-template #loaded>
+        <ng-container *ngIf="query.error; else valid">
+          An error has occurred: {{ query.error['message'] }}
+        </ng-container>
+        <ng-template #valid>
+          <ul>
+            <li
+              *ngFor="let post of query.data.posts"
+              [ngStyle]="isCached(post.id)"
+              (click)="setPostId(post.id)"
+            >
+              {{ post.title }}
+            </li>
+          </ul>
+          <div>{{ query.isFetching ? 'Updating in background...' : ' ' }}</div>
+        </ng-template>
+      </ng-template>
+    </ng-container>
+  </div>
+</div>
