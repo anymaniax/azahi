@@ -94,12 +94,12 @@ const Home = ({ sponsors }) => {
                       Simple & Familiar
                     </h3>
                     <p className="mt-2  lg:mt-4 text-base xl:text-lg lg:leading-normal leading-6 text-gray-600">
-                      If you know how to work with promises, async/await or
-                      observable, then you already know how to use Azahi.
-                      There's no global state to manage, reducers, normalization
-                      systems or heavy configurations to understand. Simply pass
-                      a function that resolves your data (or throws an error)
-                      and the rest is history.
+                      If you know how to work with promises or observable, then
+                      you already know how to use Azahi. There's no global state
+                      to manage, reducers, normalization systems or heavy
+                      configurations to understand. Simply pass a function that
+                      resolves your data (or throws an error) and the rest is
+                      history.
                     </p>
                   </div>
                 </div>
