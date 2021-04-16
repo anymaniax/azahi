@@ -2,7 +2,10 @@
 // `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 import { worker } from '../mocks';
-worker.start();
+
+setTimeout(() => {
+  worker.start();
+});
 
 export const environment = {
   production: false,

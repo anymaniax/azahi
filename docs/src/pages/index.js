@@ -183,7 +183,7 @@ const Home = ({ sponsors }) => {
         <section className="bg-gray-900 body-font">
           <div className="container max-w-7xl px-4  mx-auto -mt-72 relative">
             <iframe
-              src="https://codesandbox.io/embed/github/anymaniax/azahi/tree/main/examples/basic?autoresize=1&fontsize=16&theme=dark"
+              src="https://codesandbox.io/embed/github/anymaniax/azahi/tree/main/examples/basic?autoresize=1&fontsize=16&module=%2Fsrc%2Fapp%2Fposts%2Fposts.component.ts&theme=dark"
               title="anymaniax/azahi: basic"
               sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
               className="shadow-2xl"
