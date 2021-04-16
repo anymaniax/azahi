@@ -3,43 +3,43 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "angular-query": {
+    "azahi": {
       "projectType": "library",
-      "root": "projects/angular-query",
-      "sourceRoot": "projects/angular-query/src",
+      "root": "projects/azahi",
+      "sourceRoot": "projects/azahi/src",
       "prefix": "lib",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
-            "tsConfig": "projects/angular-query/tsconfig.lib.json",
-            "project": "projects/angular-query/ng-package.json"
+            "tsConfig": "projects/azahi/tsconfig.lib.json",
+            "project": "projects/azahi/ng-package.json"
           },
           "configurations": {
             "production": {
-              "tsConfig": "projects/angular-query/tsconfig.lib.prod.json"
+              "tsConfig": "projects/azahi/tsconfig.lib.prod.json"
             }
           }
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "main": "projects/angular-query/src/test.ts",
-            "tsConfig": "projects/angular-query/tsconfig.spec.json",
-            "karmaConfig": "projects/angular-query/karma.conf.js"
+            "main": "projects/azahi/src/test.ts",
+            "tsConfig": "projects/azahi/tsconfig.spec.json",
+            "karmaConfig": "projects/azahi/karma.conf.js"
           }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
             "lintFilePatterns": [
-              "projects/angular-query/**/*.ts",
-              "projects/angular-query/**/*.html"
+              "projects/azahi/**/*.ts",
+              "projects/azahi/**/*.html"
             ]
           }
         }
       }
     }
   },
-  "defaultProject": "angular-query"
+  "defaultProject": "azahi"
 }

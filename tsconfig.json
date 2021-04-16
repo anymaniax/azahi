@@ -14,8 +14,8 @@
     "typeRoots": ["node_modules/@types"],
     "lib": ["es2018", "dom"],
     "paths": {
-      "angular-query": ["dist/angular-query"],
-      "angular-query/*": ["dist/angular-query/*"]
+      "azahi": ["dist/azahi"],
+      "azahi/*": ["dist/azahi/*"]
     }
   },
   "angularCompilerOptions": {

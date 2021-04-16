@@ -1,11 +1,11 @@
 {
-  "name": "angular-query",
+  "name": "azahi",
   "version": "0.0.1",
   "description": "Performant and powerful remote data synchronization for Angular",
   "author": "anymaniax",
   "license": "MIT",
-  "repository": "angular-query",
-  "homepage": "https://github.com/anymaniax/angular-query#readme",
+  "repository": "azahi",
+  "homepage": "https://github.com/anymaniax/azahi#readme",
   "scripts": {
     "ng": "ng",
     "build": "ng build",
@@ -66,5 +66,14 @@
     "protractor": "~7.0.0",
     "ts-node": "~7.0.0",
     "typescript": "~4.0.5"
-  }
+  },
+  "keywords": [
+    "rest",
+    "client",
+    "fetch",
+    "data fetching",
+    "angular",
+    "azahi",
+    "react-query"
+  ]
 }
