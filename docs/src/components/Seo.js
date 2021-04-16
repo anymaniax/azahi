@@ -3,7 +3,7 @@ import { withRouter } from 'next/router';
 import React from 'react';
 
 const ogImage = require('images/azahi-og.png?url');
-const favicon = require('images/favicon.png?url');
+const favicon = require('images/emblem-light.svg?url');
 
 export const Seo = withRouter(
   ({ title, description, image = ogImage, router, children }) => (

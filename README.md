@@ -1,4 +1,4 @@
-<img src="./docs/src/images/azahi-og.png" />
+<img src="./azahi-og.png" />
 
 Hooks for managing, caching and syncing asynchronous and remote data in Angular
 

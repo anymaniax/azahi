@@ -11,6 +11,13 @@ By default, queries that unmount or become unused before their promises are reso
 
 But don't worry! If your queries are high-bandwidth or potentially very expensive to download, Azahi exposes a generic way to **cancel** query requests using a cancellation token or other related API. To integrate with this feature, attach a `cancel` function to the promise returned by your query that implements your request cancellation. When a query becomes out-of-date or inactive, this `promise.cancel` function will be called (if available):
 
+## Using `Http Client`
+
+```ts
+// with http client (done automatically)
+this.azahi.useQuery(queryKey, () => this.http.get('/todos'));
+```
+
 ## Using `axios`
 
 ```js
@@ -74,6 +81,5 @@ const query = this.azahi.useQuery(queryKey, () => {
   return promise;
 });
 
-// with http client (done automatically)
-this.azahi.useQuery(queryKey, () => this.http.get('/todos'));
+this.azahi.queryClient.cancelQueries('todos');
 ```

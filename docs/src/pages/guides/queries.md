@@ -5,12 +5,12 @@ title: Queries
 
 ## Query Basics
 
-A query is a declarative dependency on an asynchronous source of data that is tied to a **unique key**. A query can be used with any Promise based method (including GET and POST methods) to fetch data from a server. If your method modifies data on the server, we recommend using [Mutations](https://azahi.vercel.app/guides/mutations) instead.
+A query is a declarative dependency on an asynchronous source of data that is tied to a **unique key**. A query can be used with any Promise/Observable based method (including GET and POST methods) to fetch data from a server. If your method modifies data on the server, we recommend using [Mutations](https://azahi.vercel.app/guides/mutations) instead.
 
 To subscribe to a query in your components, call the `useQuery` hook with at least:
 
 - A **unique key for the query**
-- A function that returns a promise that:
+- A function that returns a promise/observable that:
   - Resolves the data, or
   - Throws an error
 

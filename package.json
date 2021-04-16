@@ -8,11 +8,15 @@
   "homepage": "https://github.com/anymaniax/azahi#readme",
   "scripts": {
     "ng": "ng",
-    "build": "ng build",
+    "build": "ng build --prod && npm run copy",
     "dev": "npm run build -- --watch",
     "test": "ng test",
     "lint": "ng lint",
-    "format": "prettier --write '**/*.{js,ts,scss,json,md}'"
+    "format": "prettier --write '**/*.{js,ts,scss,json,md}'",
+    "copy": "npm run copy:readme && npm run copy:license && npm run copy:logo",
+    "copy:readme": "cpr README.md dist/azahi/README.md --overwrite",
+    "copy:license": "cpr LICENSE dist/azahi/LICENSE --overwrite",
+    "copy:logo": "cpr azahi-og.png dist/azahi/azahi-og.png --overwrite"
   },
   "release": {
     "branches": [
@@ -48,6 +52,7 @@
     "@types/node": "^12.11.1",
     "@typescript-eslint/eslint-plugin": "4.3.0",
     "@typescript-eslint/parser": "4.3.0",
+    "cpr": "^3.0.1",
     "eslint": "^7.6.0",
     "eslint-plugin-import": "2.22.1",
     "eslint-plugin-jsdoc": "30.7.6",

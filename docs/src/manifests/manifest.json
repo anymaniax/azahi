@@ -156,7 +156,7 @@
           "editUrl": "/guides/query-filters.md"
         },
         {
-          "title": "SSR & Sapper",
+          "title": "SSR",
           "path": "/guides/ssr",
           "editUrl": "/guides/ssr.md"
         },

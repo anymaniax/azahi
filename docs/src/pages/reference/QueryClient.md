@@ -92,7 +92,7 @@ The options for `fetchQuery` are exactly the same as those of [`useQuery`](./use
 
 **Returns**
 
-- `Promise<TData>`
+- `Observable<TData>`
 
 ## `queryClient.fetchInfiniteQuery`
 
@@ -113,7 +113,7 @@ The options for `fetchInfiniteQuery` are exactly the same as those of [`fetchQue
 
 **Returns**
 
-- `Promise<InfiniteData<TData>>`
+- `Observable<InfiniteData<TData>>`
 
 ## `queryClient.prefetchQuery`
 
@@ -135,8 +135,8 @@ The options for `prefetchQuery` are exactly the same as those of [`fetchQuery`](
 
 **Returns**
 
-- `Promise<void>`
-  - A promise is returned that will either immediately resolve if no fetch is needed or after the query has been executed. It will not return any data or throw any errors.
+- `Observable<void>`
+  - An observable is returned that will either immediately resolve if no fetch is needed or after the query has been executed. It will not return any data or throw any errors.
 
 ## `queryClient.prefetchInfiniteQuery`
 
@@ -152,8 +152,8 @@ The options for `prefetchInfiniteQuery` are exactly the same as those of [`fetch
 
 **Returns**
 
-- `Promise<void>`
-  - A promise is returned that will either immediately resolve if no fetch is needed or after the query has been executed. It will not return any data or throw any errors.
+- `Observable<void>`
+  - An observable is returned that will either immediately resolve if no fetch is needed or after the query has been executed. It will not return any data or throw any errors.
 
 ## `queryClient.getQueryData`
 
@@ -281,7 +281,7 @@ await queryClient.refetchQueries(['posts', 1], { active: true, exact: true });
 
 **Returns**
 
-This function returns a promise that will resolve when all of the queries are done being refetched. By default, it **will not** throw an error if any of those queries refetches fail, but this can be configured by setting the `throwOnError` option to `true`
+This function returns an observable that will resolve when all of the queries are done being refetched. By default, it **will not** throw an error if any of those queries refetches fail, but this can be configured by setting the `throwOnError` option to `true`
 
 ## `queryClient.cancelQueries`
 
@@ -344,7 +344,7 @@ queryClient.resetQueries(queryKey, { exact: true });
 
 **Returns**
 
-This method returns a promise that resolves when all active queries have been refetched.
+This method returns an observable that resolves when all active queries have been refetched.
 
 ## `queryClient.isFetching`
 
@@ -481,4 +481,12 @@ The `clear` method clears all connected caches.
 
 ```js
 queryClient.clear();
+```
+
+## `queryClient promise based`
+
+If you want to use the default queryClient from the query core you can use the client like this
+
+```js
+queryClient.core.xxx;
 ```

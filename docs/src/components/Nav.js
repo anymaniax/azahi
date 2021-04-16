@@ -33,20 +33,6 @@ export const Nav = () => (
                 <a className="leading-6 font-medium">Examples</a>
               </Link>
             </div>
-            <div>
-              <a
-                href="https://learn.tanstack.com/p/azahi-essentials"
-                target="_blank"
-                className="leading-6 font-medium"
-              >
-                Learn
-              </a>
-            </div>
-            <div>
-              <a href="https://tanstack.com" className="leading-6 font-medium">
-                TanStack
-              </a>
-            </div>
           </div>
           <div>
             <a

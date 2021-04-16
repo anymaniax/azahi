@@ -82,7 +82,7 @@ this.azahi.useMutation(addTodo, {
 });
 ```
 
-When returning a promise in any of the callback functions it will first be awaited before the next callback is called:
+When returning a promise/observable in any of the callback functions it will first be awaited before the next callback is called:
 
 ```js
 this.azahi.useMutation(addTodo, {
@@ -129,7 +129,16 @@ Use `mutateAsync` instead of `mutate` to get a promise which will resolve on suc
 
 ```js
 const mutation = this.azahi.useMutation(addTodo);
-const mutate = await this.azahi.mutateAsync(todo);
+const mutate = await mutation.mutateAsync(todo);
+```
+
+## Observable
+
+Use `mutateObs` instead of `mutate` to get a observable. This can for example be used to compose side effects.
+
+```js
+const mutation = this.azahi.useMutation(addTodo);
+mutation.mutateObs(todo).pipe(tap((result) => console.log(result)));
 ```
 
 ## Retry

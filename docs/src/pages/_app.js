@@ -1,30 +1,10 @@
-import React from 'react';
 import '@docsearch/react/dist/style.css';
-import '../styles/index.css';
-import Head from 'next/head';
 import { SearchProvider } from 'components/useSearch';
-
-function loadScript(src, attrs = {}) {
-  if (typeof document !== 'undefined') {
-    const script = document.createElement('script');
-    script.async = true;
-    script.defer = true;
-    Object.keys(attrs).forEach((attr) =>
-      script.setAttribute(attr, attrs[attr])
-    );
-    script.src = src;
-    document.body.appendChild(script);
-  }
-}
+import Head from 'next/head';
+import React from 'react';
+import '../styles/index.css';
 
 function MyApp({ Component, pageProps }) {
-  React.useEffect(() => {
-    loadScript('https://buttons.github.io/buttons.js');
-    loadScript('https://tanstack.ck.page/e394781e7a/index.js', {
-      'data-uid': 'e394781e7a',
-    });
-  }, []);
-
   return (
     <>
       <Head>
