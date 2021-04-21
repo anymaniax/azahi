@@ -2,16 +2,17 @@ import { Observable } from 'rxjs';
 import { RetryDelayValue, RetryValue } from './query-core/core/retryer';
 import {
   FetchInfiniteQueryOptions,
+  FetchNextPageOptions,
+  FetchPreviousPageOptions,
   FetchQueryOptions,
   InfiniteQueryObserverOptions,
   InfiniteQueryObserverResult,
-  MutateOptions,
-  MutationFunction,
   MutationKey,
   MutationStatus,
   QueryObserverOptions,
   QueryObserverResult,
   QueryOptions,
+  RefetchOptions,
 } from './query-core/core/types';
 import {
   InfiniteQueryObservable,
@@ -63,91 +64,72 @@ export type UseInfiniteQueryOptions<
   TQueryData = TQueryFnData
 > = InfiniteQueryObserverOptions<TData, TError, TQueryFnData, TQueryData>;
 
-export type UseBaseQueryResult<
-  TData = unknown,
-  TError = unknown
-> = QueryObserverResult<TData, TError>;
+export type UseBaseQueryResult<TData = unknown, TError = unknown> = Omit<
+  QueryObserverResult<TData, TError>,
+  'refetch'
+> & {
+  refetch: (
+    options?: RefetchOptions
+  ) => Observable<QueryObserverResult<TData, TError>>;
+};
 
 export type UseQueryResult<
   TData = unknown,
   TError = unknown
 > = UseBaseQueryResult<TData, TError>;
 
-export type UseInfiniteQueryResult<
-  TData = unknown,
-  TError = unknown
-> = InfiniteQueryObserverResult<TData, TError>;
+export type UseInfiniteQueryResult<TData = unknown, TError = unknown> = Omit<
+  InfiniteQueryObserverResult<TData, TError>,
+  'fetchNextPage' | 'fetchPreviousPage' | 'refetch'
+> & {
+  refetch: (
+    options?: RefetchOptions
+  ) => Observable<QueryObserverResult<TData, TError>>;
+  fetchNextPage: (
+    options?: FetchNextPageOptions
+  ) => Observable<InfiniteQueryObserverResult<TData, TError>>;
+  fetchPreviousPage: (
+    options?: FetchPreviousPageOptions
+  ) => Observable<InfiniteQueryObserverResult<TData, TError>>;
+};
 
-export interface UseMutationOptions<
+export type UseMutationOptions<
   TData = unknown,
   TError = unknown,
   TVariables = void,
   TContext = unknown
-> {
-  mutationFn?: MutationFunction<TData, TVariables>;
+> = MutateOptionsObservable<TData, TError, TVariables, TContext> & {
+  mutationFn?: MutationFunctionObservable<TData, TVariables>;
   mutationKey?: MutationKey;
-
   onMutate?: (
     variables: TVariables
   ) => Promise<TContext> | Observable<void> | TContext;
-  onSuccess?: (
-    data: TData,
-    variables: TVariables,
-    context: TContext | undefined
-  ) => Promise<void> | Observable<void> | void;
-  onError?: (
-    error: TError,
-    variables: TVariables,
-    context: TContext | undefined
-  ) => Promise<void> | Observable<void> | void;
-  onSettled?: (
-    data: TData | undefined,
-    error: TError | null,
-    variables: TVariables,
-    context: TContext | undefined
-  ) => Promise<void> | Observable<void> | void;
   retry?: RetryValue<TError>;
   retryDelay?: RetryDelayValue<TError>;
   useErrorBoundary?: boolean;
-}
+};
 
 export type MutationFunctionObservable<
   TData = unknown,
   TVariables = unknown
 > = (variables: TVariables) => Promise<TData> | Observable<TData>;
 
-export interface MutationOptionsWithObservable<
+export type MutationOptionsWithObservable<
   TData = unknown,
   TError = unknown,
   TVariables = void,
   TContext = unknown
-> {
+> = MutateOptionsObservable<TData, TError, TVariables, TContext> & {
   mutationFn?: MutationFunctionObservable<TData, TVariables>;
   mutationKey?: MutationKey;
   variables?: TVariables;
   onMutate?: (
     variables: TVariables
   ) => Promise<TContext> | Observable<TContext> | TContext;
-  onSuccess?: (
-    data: TData,
-    variables: TVariables,
-    context: TContext
-  ) => Promise<void> | Observable<void> | void;
-  onError?: (
-    error: TError,
-    variables: TVariables,
-    context: TContext | undefined
-  ) => Promise<void> | Observable<void> | void;
-  onSettled?: (
-    data: TData | undefined,
-    error: TError | null,
-    variables: TVariables,
-    context: TContext | undefined
-  ) => Promise<void> | Observable<void> | void;
   retry?: RetryValue<TError>;
   retryDelay?: RetryDelayValue<TError>;
   _defaulted?: boolean;
-}
+};
 
 export interface MutationObserverOptionsWithObservable<
   TData = unknown,
@@ -165,7 +147,7 @@ export type UseMutateFunction<
   TContext = unknown
 > = (
   variables: TVariables,
-  options?: MutateOptions<TData, TError, TVariables, TContext>
+  options?: MutateOptionsObservable<TData, TError, TVariables, TContext>
 ) => void;
 
 export type UseMutateAsyncFunction<
@@ -175,7 +157,7 @@ export type UseMutateAsyncFunction<
   TContext = unknown
 > = (
   variables: TVariables,
-  options?: MutateOptions<TData, TError, TVariables, TContext>
+  options?: MutateOptionsObservable<TData, TError, TVariables, TContext>
 ) => Promise<TData>;
 
 export type UseMutateObservable<
@@ -185,7 +167,7 @@ export type UseMutateObservable<
   TContext = unknown
 > = (
   variables: TVariables,
-  options?: MutateOptions<TData, TError, TVariables, TContext>
+  options?: MutateOptionsObservable<TData, TError, TVariables, TContext>
 ) => Observable<TData>;
 
 export interface UseMutationResult<
@@ -242,4 +224,28 @@ export type UseMutationObservable<
 export type UseInfiniteQueryObservable<
   TData = unknown,
   TError = unknown
-> = InfiniteQueryObservable<InfiniteQueryObserverResult<TData, TError>>;
+> = InfiniteQueryObservable<UseInfiniteQueryResult<TData, TError>>;
+
+export interface MutateOptionsObservable<
+  TData = unknown,
+  TError = unknown,
+  TVariables = void,
+  TContext = unknown
+> {
+  onSuccess?: (
+    data: TData,
+    variables: TVariables,
+    context: TContext
+  ) => Promise<void> | Observable<void> | void;
+  onError?: (
+    error: TError,
+    variables: TVariables,
+    context: TContext | undefined
+  ) => Promise<void> | Observable<void> | void;
+  onSettled?: (
+    data: TData | undefined,
+    error: TError | null,
+    variables: TVariables,
+    context: TContext | undefined
+  ) => Promise<void> | Observable<void> | void;
+}

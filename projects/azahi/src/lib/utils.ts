@@ -3,11 +3,13 @@ import { takeUntil } from 'rxjs/operators';
 import {
   InfiniteQueryObserverResult,
   MutationKey,
+  MutationObserverResult,
   MutationOptions,
   notifyManager,
   QueryFunction,
   QueryKey,
   QueryObserverOptions,
+  QueryObserverResult,
 } from './query-core';
 import { isQueryKey } from './query-core/core/utils';
 import {
@@ -15,7 +17,9 @@ import {
   MutationOptionsWithObservable,
   QueryFunctionWithObservable,
   QueryOptionsWithObservable,
+  UseInfiniteQueryResult,
   UseMutateAsyncFunction,
+  UseMutateFunction,
   UseMutateObservable,
   UseMutationResult,
   UseQueryOptions,
@@ -77,8 +81,12 @@ export const getMutateObservable = <
   TContext = unknown
 >(
   mutateObs: UseMutateAsyncFunction<TData, TError, TVariables, TContext>
-): UseMutateObservable<TData, TError, TVariables, TContext> => (...args) => {
-  const res = mutateObs(...args);
+): UseMutateObservable<TData, TError, TVariables, TContext> => (
+  variables,
+  options
+) => {
+  const parsedOptions = parseMutationArgs(options);
+  const res = mutateObs(variables, parsedOptions);
 
   return from(res);
 };
@@ -122,6 +130,30 @@ export const parseQueryArgs = <
     queryFn: QueryFunction<any>;
   };
 };
+
+export const parseQueryResult = (
+  result: QueryObserverResult<any, any>
+): UseQueryResult<any, any> => ({
+  ...result,
+  refetch: (...args) => from(result.refetch(...args)),
+  ...((result as InfiniteQueryObserverResult<any, any>).fetchNextPage &&
+  (result as InfiniteQueryObserverResult<any, any>).fetchPreviousPage
+    ? {
+        fetchNextPage: (...args) =>
+          from(
+            (result as InfiniteQueryObserverResult<any, any>).fetchNextPage(
+              ...args
+            )
+          ),
+        fetchPreviousPage: (...args) =>
+          from(
+            (result as InfiniteQueryObserverResult<any, any>).fetchPreviousPage(
+              ...args
+            )
+          ),
+      }
+    : {}),
+});
 
 export const parseMutationArgs = (
   arg1:
@@ -185,6 +217,19 @@ export const parseMutationArgs = (
   } as MutationOptions<any, any, any, any>;
 };
 
+export const parseMutationResult = <TData, TError, TVariables, TContext>(
+  result: MutationObserverResult<TData, TError, TVariables, TContext>,
+  mutate: UseMutateFunction<TData, TError, TVariables, TContext>
+): UseMutationResult<TData, TError, TVariables, TContext> => ({
+  ...result,
+  mutate,
+  mutateAsync: (variables, options) => {
+    const parsedOptions = parseMutationArgs(options);
+    return result.mutate(variables, parsedOptions);
+  },
+  mutateObs: getMutateObservable(result.mutate),
+});
+
 export class QueryObservable<
   Result extends UseQueryResult = UseQueryResult
 > extends Observable<Result> {
@@ -204,7 +249,7 @@ export class QueryObservable<
 }
 
 export class InfiniteQueryObservable<
-  Result extends InfiniteQueryObserverResult = InfiniteQueryObserverResult
+  Result extends UseInfiniteQueryResult = UseInfiniteQueryResult
 > extends Observable<Result> {
   public fetchNextPage: Result['fetchNextPage'];
   public fetchPreviousPage: Result['fetchPreviousPage'];

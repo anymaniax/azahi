@@ -13,9 +13,9 @@ import {
   UseMutationResult,
 } from './types';
 import {
-  getMutateObservable,
   MutationObservable,
   parseMutationArgs,
+  parseMutationResult,
 } from './utils';
 
 export class Mutation {
@@ -55,47 +55,27 @@ export class Mutation {
       variables,
       mutateOptions
     ) => {
-      observer.mutate(variables, mutateOptions).catch(noop);
+      const parsedOptions = parseMutationArgs(mutateOptions);
+      observer.mutate(variables, parsedOptions).catch(noop);
     };
 
-    const initialResult = observer.getCurrentResult();
-    const initialMutationResult: UseMutationResult<
-      TData,
-      TError,
-      TVariables,
-      TContext
-    > = {
-      ...initialResult,
-      mutate,
-      mutateAsync: initialResult.mutate,
-      mutateObs: getMutateObservable(initialResult.mutate),
-    };
+    const initialResult = parseMutationResult(
+      observer.getCurrentResult(),
+      mutate
+    );
 
     const mutationObservable = new MutationObservable<
       UseMutationResult<TData, TError, TVariables, TContext>
-    >(initialMutationResult, (obs) => {
-      const firstResult = observer.getCurrentResult();
-      const firstMutationResult: UseMutationResult<
-        TData,
-        TError,
-        TVariables,
-        TContext
-      > = {
-        ...firstResult,
-        mutate,
-        mutateAsync: firstResult.mutate,
-        mutateObs: getMutateObservable(firstResult.mutate),
-      };
-      obs.next(firstMutationResult);
+    >(initialResult, (obs) => {
+      const firstResult = parseMutationResult(
+        observer.getCurrentResult(),
+        mutate
+      );
+      obs.next(firstResult);
 
       const unsubscribe = observer.subscribe(
         notifyManager.batchCalls((currentResult) =>
-          obs.next({
-            ...currentResult,
-            mutate,
-            mutateAsync: currentResult.mutate,
-            mutateObs: getMutateObservable(initialResult.mutate),
-          })
+          obs.next(parseMutationResult(currentResult, mutate))
         )
       );
 

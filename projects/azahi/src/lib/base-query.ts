@@ -1,7 +1,7 @@
 import { QueryClient } from './query-client';
 import { notifyManager, QueryObserver } from './query-core';
 import { UseBaseQueryOptions, UseQueryResult } from './types';
-import { QueryObservable, setBatchCalls } from './utils';
+import { parseQueryResult, QueryObservable, setBatchCalls } from './utils';
 
 export class BaseQuery {
   constructor(private queryClient: QueryClient) {}
@@ -27,15 +27,17 @@ export class BaseQuery {
     );
 
     const queryObservable = new Observable<UseQueryResult<TData, TError>>(
-      observer.getOptimisticResult(defaultedOptions),
+      parseQueryResult(observer.getOptimisticResult(defaultedOptions)),
       (obs) => {
         const firstResult = observer.getOptimisticResult(defaultedOptions);
 
         // Handle result property usage tracking
         obs.next(
-          defaultedOptions.notifyOnChangeProps === 'tracked'
-            ? observer.trackResult(firstResult)
-            : firstResult
+          parseQueryResult(
+            defaultedOptions.notifyOnChangeProps === 'tracked'
+              ? observer.trackResult(firstResult)
+              : firstResult
+          )
         );
 
         const unsubscribe = observer.subscribe(
@@ -43,9 +45,11 @@ export class BaseQuery {
             const result = observer.getOptimisticResult(defaultedOptions);
 
             obs.next(
-              defaultedOptions.notifyOnChangeProps === 'tracked'
-                ? observer.trackResult(result)
-                : result
+              parseQueryResult(
+                defaultedOptions.notifyOnChangeProps === 'tracked'
+                  ? observer.trackResult(result)
+                  : result
+              )
             );
           })
         );
