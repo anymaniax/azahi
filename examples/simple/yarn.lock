@@ -1662,10 +1662,10 @@ axobject-query@2.0.2:
   dependencies:
     ast-types-flow "0.0.7"
 
-azahi@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/azahi/-/azahi-0.0.1.tgz#bc0cea759862178bcaba4db7018c77d21c50c9fb"
-  integrity sha512-k0ezVI2G/mMOabSj5y1wfxDyOBr2hSjiG7+2EuaobIwKhojAm8WTEKpQJsBP7NAJLwr9z7QUaxaix2en+iqFOw==
+azahi@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/azahi/-/azahi-0.0.2.tgz#b3143ff0c883f541bbb8328a5ec5b3f209a412dd"
+  integrity sha512-WzAo0w5Xkbb+MHhPZo6ffnUlLxttUyXc70F39Eo4IjfCUdqIm7+MrnEkRh4J7NvBUSTgfuaXRo4ZPnlKzXb5aw==
   dependencies:
     tslib "^2.0.0"
 
