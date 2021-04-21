@@ -28,6 +28,11 @@ function MyApp({ Component, pageProps }) {
           `,
           }}
         />
+        <script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "8cdddee8f53942238d9b247fdfb09623"}'
+        ></script>
       </Head>
       {/* eslint-disable-next-line jsx-a11y/alt-text */}
       <img src="https://static.scarf.sh/a.png?x-pxid=c03d3ddd-b47e-4e26-a9b2-9df68b2ac970" />
