@@ -73,7 +73,7 @@ const result = this.azahi.useQuery({
   - The function that the query will use to request data.
   - Receives a `QueryFunctionContext` object with the following variables:
     - `queryKey: QueryKey`
-  - Must return a promise that will either resolves data or throws an error.
+  - Must return a promise or an observable that will either resolves data or throws an error.
 - `enabled: boolean`
   - Set this to `false` to disable this query from automatically running.
   - Can be used for [Dependent Queries](./guides/dependent-queries).
@@ -203,7 +203,7 @@ const result = this.azahi.useQuery({
   - The failure count for the query.
   - Incremented every time the query fails.
   - Reset to `0` when the query succeeds.
-- `refetch: (options: { throwOnError: boolean }) => Promise<UseQueryResult>`
+- `refetch: (options: { throwOnError: boolean }) => Observable<UseQueryResult>`
   - A function to manually refetch the query.
   - If the query errors, the error will only be logged. If you want an error to be thrown, pass the `throwOnError: true` option
 - `remove: () => void`

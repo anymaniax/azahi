@@ -41,25 +41,25 @@ mutation.mutateAsync();
 
 - `mutationFn: (variables: TVariables) => Promise<TData> | Observable<TData>`
   - **Required**
-  - A function that performs an asynchronous task and returns a promise.
+  - A function that performs an asynchronous task and returns a promise or an observable.
   - `variables` is an object that `mutate` will pass to your `mutationFn`
 - `mutationKey: string`
   - Optional
   - A mutation key can be set to inherit defaults set with `queryClient.setMutationDefaults`.
-- `onMutate: (variables: TVariables) => Promise<TContext | void> | TContext | void`
+- `onMutate: (variables: TVariables) => Observable<TContext | void> | Promise<TContext | void> | TContext | void`
   - Optional
   - This function will fire before the mutation function is fired and is passed the same variables the mutation function would receive
   - Useful to perform optimistic updates to a resource in hopes that the mutation succeeds
   - The value returned from this function will be passed to both the `onError` and `onSettled` functions in the event of a mutation failure and can be useful for rolling back optimistic updates.
-- `onSuccess: (data: TData, variables: TVariables, context?: TContext) => Promise<void> | void`
+- `onSuccess: (data: TData, variables: TVariables, context?: TContext) => Observable<void> | Promise<void> | void`
   - Optional
   - This function will fire when the mutation is successful and will be passed the mutation's result.
   - If a promise is returned, it will be awaited and resolved before proceeding
-- `onError: (err: TError, variables: TVariables, context?: TContext) => Promise<void> | void`
+- `onError: (err: TError, variables: TVariables, context?: TContext) => Observable<void> | Promise<void> | void`
   - Optional
   - This function will fire if the mutation encounters an error and will be passed the error.
   - If a promise is returned, it will be awaited and resolved before proceeding
-- `onSettled: (data: TData, error: TError, variables: TVariables, context?: TContext) => Promise<void> | void`
+- `onSettled: (data: TData, error: TError, variables: TVariables, context?: TContext) => Observable<void> |Promise<void> | void`
   - Optional
   - This function will fire when the mutation is either successfully fetched or encounters an error and be passed either the data or error
   - If a promise is returned, it will be awaited and resolved before proceeding
@@ -86,6 +86,8 @@ mutation.mutateAsync();
   - If you make multiple requests, `onSuccess` will fire only after the latest call you've made.
 - `mutateAsync: (variables: TVariables, { onSuccess, onSettled, onError }) => Promise<TData>`
   - Similar to `mutate` but returns a promise which can be awaited.
+- `mutateObs: (variables: TVariables, { onSuccess, onSettled, onError }) => Observable<TData>`
+  - Similar to `mutate` but returns an observable which can be awaited.
 - `status: string`
   - Will be:
     - `idle` initial status prior to the mutation function executing.
