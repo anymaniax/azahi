@@ -106,7 +106,7 @@ export const parseQueryArgs = <
   if (!isQueryKey(arg1)) {
     return {
       ...arg1,
-      queryFn: getQueryFnDataPromise(arg1.queryFn),
+      queryFn: getQueryFnDataPromise(arg1?.queryFn),
     } as Omit<TOptions, 'queryFn'> & {
       queryFn: QueryFunction<any>;
     };
@@ -124,7 +124,7 @@ export const parseQueryArgs = <
 
   return {
     ...arg2,
-    queryFn: getQueryFnDataPromise(arg2.queryFn),
+    queryFn: getQueryFnDataPromise(arg2?.queryFn),
     queryKey: arg1,
   } as Omit<TOptions, 'queryFn'> & {
     queryFn: QueryFunction<any>;
@@ -179,7 +179,7 @@ export const parseMutationArgs = (
     }
     return {
       ...arg2,
-      mutationFn: getQueryFnDataPromise(arg2.mutationFn),
+      mutationFn: getQueryFnDataPromise(arg2?.mutationFn),
       onMutate: getQueryFnDataPromise(arg3?.onMutate),
       onSuccess: getQueryFnDataPromise(arg3?.onSuccess),
       onError: getQueryFnDataPromise(arg3?.onError),
@@ -209,7 +209,7 @@ export const parseMutationArgs = (
 
   return {
     ...arg1,
-    mutationFn: getQueryFnDataPromise(arg1.mutationFn),
+    mutationFn: getQueryFnDataPromise(arg1?.mutationFn),
     onMutate: getQueryFnDataPromise(arg1?.onMutate),
     onSuccess: getQueryFnDataPromise(arg1?.onSuccess),
     onError: getQueryFnDataPromise(arg1?.onError),
